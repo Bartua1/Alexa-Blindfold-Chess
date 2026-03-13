@@ -13,6 +13,11 @@ from chess_engine.board_manager import BoardManager
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+import os
+
+# Get path to APL folder
+APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
+
 def get_board_image_url(fen):
     """Returns a URL to a rendered board image using a 3rd party service."""
     # Using chess-board.com as a simple public renderer
@@ -21,21 +26,28 @@ def get_board_image_url(fen):
 
 def get_apl_directive(handler_input, engine):
     """Generates the APL RenderDocument directive if supported."""
-    supported = getattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'alexa_presentation_apl', None)
-    if supported:
-        with open("apl/chessboard.json") as f:
-            apl_doc = json.load(f)
-            
-        return {
-            "type": "Alexa.Presentation.APL.RenderDocument",
-            "document": apl_doc,
-            "datasources": {
-                "boardData": {
-                    "boardUrl": get_board_image_url(engine.get_fen()),
-                    "status": engine.get_game_result()
+    try:
+        supported = getattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'alexa_presentation_apl', None)
+        if supported:
+            # Use absolute path for robustness in Lambda
+            path = os.path.join(APL_PATH, "chessboard.json")
+            with open(path) as f:
+                apl_doc = json.load(f)
+                
+            return {
+                "type": "Alexa.Presentation.APL.RenderDocument",
+                "document": apl_doc,
+                "datasources": {
+                    "payload": {
+                        "boardData": {
+                            "boardUrl": get_board_image_url(engine.get_fen()),
+                            "status": engine.get_game_result()
+                        }
+                    }
                 }
             }
-        }
+    except Exception as e:
+        logger.error(f"Error generating APL: {e}", exc_info=True)
     return None
 
 class LaunchRequestHandler(AbstractRequestHandler):
