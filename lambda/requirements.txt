@@ -1,5 +1,4 @@
 ask-sdk-core
 python-chess
 flask
-flask-ask-sdk
 
