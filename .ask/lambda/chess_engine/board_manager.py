@@ -1,0 +1,68 @@
+import chess
+import random
+
+class BoardManager:
+    def __init__(self, fen=None):
+        if fen:
+            self.board = chess.Board(fen)
+        else:
+            self.board = chess.Board()
+
+    def get_fen(self):
+        return self.board.fen()
+
+    def make_move(self, move_san):
+        """Attempts to make a move from SAN string (e.g., 'e4', 'Nf3')."""
+        try:
+            move = self.board.parse_san(move_san)
+            self.board.push(move)
+            return True, move.uci()
+        except Exception:
+            return False, "Illegal move"
+
+    def get_ai_move(self):
+        """Generates a random legal move for the AI."""
+        legal_moves = list(self.board.legal_moves)
+        if not legal_moves:
+            return None
+        move = random.choice(legal_moves)
+        san_move = self.board.san(move)
+        self.board.push(move)
+        return san_move
+
+    def is_game_over(self):
+        return self.board.is_game_over()
+
+    def get_game_result(self):
+        if self.board.is_checkmate():
+            return "CHECKMATE"
+        if self.board.is_stalemate():
+            return "STALEMATE"
+        if self.board.is_insufficient_material():
+            return "DRAW_INSUFFICIENT_MATERIAL"
+        return "ONGOING"
+
+    @staticmethod
+    def parse_alexa_slots(piece, square):
+        """
+        Converts Alexa slots to SAN.
+        Simple implementation: assumes piece is lowercase and square is like 'e4'.
+        """
+        piece_map = {
+            "pawn": "",
+            "knight": "N",
+            "bishop": "B",
+            "rook": "R",
+            "queen": "Q",
+            "king": "K",
+            # Spanish mapping
+            "peón": "",
+            "caballo": "N",
+            "alfil": "B",
+            "torre": "R",
+            "reina": "Q",
+            "rey": "K"
+        }
+        
+        prefix = piece_map.get(piece.lower(), "")
+        return f"{prefix}{square.lower()}"

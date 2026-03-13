@@ -13,4 +13,6 @@ To create a high-quality Alexa Skill that allows users to play chess entirely by
 - **Multi-language Support**: Initially supporting English (`en-US`) and Spanish (`es-ES`).
 - **Progressive Difficulty**: Different engine levels for various skill levels.
 - **Puzzles & Challenges**: curated chess puzzles to solve by voice.
+- **Energy System**: The majority of actions cost energy, which regenerates over time.
+- **Tile System**: Alexa will say a random square and you have to respond with the color of that square. (Basic training for chess visualization)
 - **Monetization (ISP)**: Energy systems, memberships, and consumable items like "Undo Moves".

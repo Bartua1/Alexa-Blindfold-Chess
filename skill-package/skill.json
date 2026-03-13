@@ -3,16 +3,78 @@
     "publishingInformation": {
       "locales": {
         "en-US": {
-          "name": "Blindfold Chess"
+          "name": "Blindfold Chess",
+          "summary": "Play chess entirely by voice. Master your visualization skills.",
+          "description": "Blindfold Chess allows you to play a full game of chess against an AI using only your voice. Challenge your mind, improve your spatial visualization, and enjoy the game hands-free. Perfect for practice or casual play.",
+          "keywords": [
+            "chess",
+            "blindfold",
+            "board game",
+            "brain",
+            "visualization"
+          ],
+          "examplePhrases": [
+            "Alexa, open Blindfold Chess",
+            "pawn to e4",
+            "knight to f3"
+          ],
+          "smallIconUri": "file://assets/icon_108.png",
+          "largeIconUri": "file://assets/icon_512.png"
         },
         "es-ES": {
-          "name": "Ajedrez a Ciegas"
+          "name": "Ajedrez a Ciegas",
+          "summary": "Juega al ajedrez totalmente por voz. Domina tu visualización.",
+          "description": "Ajedrez a Ciegas te permite jugar una partida completa contra una IA usando solo tu voz. Desafía tu mente, mejora tu visualización espacial y disfruta del juego sin manos. Perfecto para practicar o jugar casualmente.",
+          "keywords": [
+            "ajedrez",
+            "ciegas",
+            "tablero",
+            "cerebro",
+            "visualización"
+          ],
+          "examplePhrases": [
+            "Alexa, abre Ajedrez a Ciegas",
+            "peón a e4",
+            "caballo a f3"
+          ],
+          "smallIconUri": "file://assets/icon_108.png",
+          "largeIconUri": "file://assets/icon_512.png"
         }
-      }
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "Open the skill and say 'pawn to e4'. Ensure the skill recognizes the move and responds with a counter-move.",
+      "category": "GAMES",
+      "distributionCountries": []
     },
     "apis": {
-      "custom": {}
+      "custom": {
+        "endpoint": {
+          "uri": "https://example.com/alexa",
+          "sslCertificateType": "Wildcard"
+        },
+        "interfaces": [
+          {
+            "type": "ALEXA_PRESENTATION_APL"
+          }
+        ]
+      }
     },
-    "manifestVersion": "1.0"
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "en-US": {
+          "privacyPolicyUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/privacy-policy",
+          "termsOfUseUrl": "https://bartualfdez.asuscomm.com/blindfoldskill/terms-of-use"
+        },
+        "es-ES": {
+          "privacyPolicyUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/privacy-policy",
+          "termsOfUseUrl": "https://bartualfdez.asuscomm.com/blindfoldskill/terms-of-use"
+        }
+      },
+      "usesPersonalInfo": false
+    }
   }
 }

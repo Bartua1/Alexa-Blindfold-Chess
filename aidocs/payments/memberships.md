@@ -5,7 +5,7 @@
 | Feature | Free (Pawn) | Plus (Knight) | Pro (Grandmaster) |
 | :--- | :--- | :--- | :--- |
 | **Price** | $0.00 | $X.XX / Month | $Y.YY / Month |
-| **Daily Matches** | 3 Matches/Day | 15 Matches/Day | Unlimited |
+| **Daily Matches** | 1 Match/Day | 7 Matches/Day | Unlimited |
 | **Energy Cap** | 5 Units | 25 Units | No Limit |
 | **Energy Regen** | 1 per hour | 5 per hour | Instant |
 | **Puzzles** | Basic Puzzles | All Puzzles | All Puzzles + Daily Challenges |

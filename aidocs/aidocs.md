@@ -10,3 +10,4 @@ Welcome to the documentation for the Alexa Blindfold Chess project.
 - [**Payments**](file:///Users/bartua1/Documents/ProyectosGitHub/Alexa-Blindfold-Chess/aidocs/payments/):
     - [**Memberships**](file:///Users/bartua1/Documents/ProyectosGitHub/Alexa-Blindfold-Chess/aidocs/payments/memberships.md): Subscription tiers (Pawn, Knight, Grandmaster).
     - [**Purchase-Once**](file:///Users/bartua1/Documents/ProyectosGitHub/Alexa-Blindfold-Chess/aidocs/payments/purchase-once.md): Consumables and entitlements.
+    - [**Cost Estimate**](file:///Users/bartua1/Documents/ProyectosGitHub/Alexa-Blindfold-Chess/aidocs/payments/costs.md): Monthly running costs and AWS Free Tier details.

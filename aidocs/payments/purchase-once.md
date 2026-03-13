@@ -6,6 +6,7 @@ These items are used up and can be repurchased.
 1. **Energy Refill**:
     - Instantly refills the player's energy to maximum.
     - Useful for Free/Plus players who want to keep playing after hitting a limit.
+    - This is the recommended alternative to "Ad-based" regeneration. See [Monetization Strategy](file:///Users/bartua1/Documents/ProyectosGitHub/Alexa-Blindfold-Chess/aidocs/payments/monetization-strategy.md).
 2. **Undo Bundle**:
     - Pack of 5 or 10 "Undo Move" credits.
     - Allows the player to retract a move during a match against the engine.

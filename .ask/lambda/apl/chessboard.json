@@ -1,0 +1,36 @@
+{
+  "type": "APL",
+  "version": "2023.2",
+  "import": [],
+  "mainTemplate": {
+    "parameters": [
+      "payload"
+    ],
+    "items": [
+      {
+        "type": "Container",
+        "width": "100%",
+        "height": "100%",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "items": [
+          {
+            "type": "Image",
+            "source": "${payload.boardData.boardUrl}",
+            "width": "80vh",
+            "height": "80vh",
+            "scale": "best-fit"
+          },
+          {
+            "type": "Text",
+            "text": "Blindfold Chess - ${payload.boardData.status}",
+            "position": "absolute",
+            "bottom": "5%",
+            "fontSize": "24dp",
+            "color": "white"
+          }
+        ]
+      }
+    ]
+  }
+}
