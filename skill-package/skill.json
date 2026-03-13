@@ -4,6 +4,9 @@
       "locales": {
         "en-US": {
           "name": "Blindfold Chess"
+        },
+        "es-ES": {
+          "name": "Ajedrez a Ciegas"
         }
       }
     },

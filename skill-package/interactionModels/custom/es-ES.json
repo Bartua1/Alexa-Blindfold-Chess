@@ -1,0 +1,60 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "ajedrez a ciegas",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "MoveIntent",
+          "slots": [
+            {
+              "name": "piece",
+              "type": "CHESS_PIECE"
+            },
+            {
+              "name": "square",
+              "type": "CHESS_SQUARE"
+            }
+          ],
+          "samples": [
+            "mueve {piece} a {square}",
+            "juega {piece} {square}",
+            "{piece} a {square}",
+            "mueve el {piece} a {square}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "CHESS_PIECE",
+          "values": [
+            { "name": { "value": "peón", "synonyms": ["peon"] } },
+            { "name": { "value": "torre" } },
+            { "name": { "value": "caballo" } },
+            { "name": { "value": "alfil" } },
+            { "name": { "value": "reina", "synonyms": ["dama"] } },
+            { "name": { "value": "rey" } }
+          ]
+        },
+        {
+          "name": "CHESS_SQUARE",
+          "values": [
+            { "name": { "value": "e4" } },
+            { "name": { "value": "d4" } }
+          ]
+        }
+      ]
+    }
+  }
+}
