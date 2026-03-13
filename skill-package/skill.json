@@ -49,7 +49,7 @@
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "https://example.com/alexa",
+          "uri": "https://bartualfdez.asuscomm.com/alexa",
           "sslCertificateType": "Wildcard"
         },
         "interfaces": [
