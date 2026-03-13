@@ -1,0 +1,59 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "blindfold chess",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "MoveIntent",
+          "slots": [
+            {
+              "name": "piece",
+              "type": "CHESS_PIECE"
+            },
+            {
+              "name": "square",
+              "type": "CHESS_SQUARE"
+            }
+          ],
+          "samples": [
+            "move {piece} to {square}",
+            "play {piece} {square}",
+            "{piece} to {square}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "CHESS_PIECE",
+          "values": [
+            { "name": { "value": "pawn" } },
+            { "name": { "value": "rook" } },
+            { "name": { "value": "knight" } },
+            { "name": { "value": "bishop" } },
+            { "name": { "value": "queen" } },
+            { "name": { "value": "king" } }
+          ]
+        },
+        {
+          "name": "CHESS_SQUARE",
+          "values": [
+            { "name": { "value": "e4" } },
+            { "name": { "value": "d4" } }
+          ]
+        }
+      ]
+    }
+  }
+}
