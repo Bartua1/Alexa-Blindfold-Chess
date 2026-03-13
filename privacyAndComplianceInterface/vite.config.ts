@@ -7,7 +7,7 @@ export default defineConfig({
   base: '/blindfoldchess/',
   server: {
     host: true,
-    port: 5173,
+    port: 5182,
     allowedHosts: [
       'bartualfdez.asuscomm.com'
     ],
