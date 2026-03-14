@@ -27,17 +27,16 @@ const PuzzleRenderer = () => {
 
   return (
     <div className="puzzle-renderer-container">
-      <div className="board-wrapper" ref={boardRef} style={{ width: '600px', height: '600px' }}>
+      <div className="board-wrapper" ref={boardRef}>
         <Chessboard 
-          options={{
-            position: fen,
-            boardStyle: {
-              borderRadius: '4px',
-              boxShadow: '0 5px 15px rgba(0, 0, 0, 0.5)'
-            },
-            darkSquareStyle: { backgroundColor: '#b58863' },
-            lightSquareStyle: { backgroundColor: '#f0d9b5' }
+          position={fen} 
+          boardWidth={600}
+          customBoardStyle={{
+            borderRadius: '4px',
+            boxShadow: '0 5px 15px rgba(0, 0, 0, 0.5)'
           }}
+          customDarkSquareStyle={{ backgroundColor: '#b58863' }}
+          customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}
         />
       </div>
       <div className="renderer-controls">
