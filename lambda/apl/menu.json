@@ -21,7 +21,7 @@
         "backgroundImageSource": "https://img.freepik.com/free-photo/white-marble-texture-background-high-resolution_34261-755.jpg",
         "backgroundBlur": false,
         "backgroundColorOverlay": true,
-        "imageAspectRatio": "square",
+        "imageAspectRatio": "portrait",
         "imageMetadataPrimacy": true,
         "imageScale": "best-fit",
         "listItems": "${payload.menuData.listItems}",

@@ -50,20 +50,21 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                                 "listItems": [
                                     {
                                         "primaryText": data["MENU_MATCHES"],
-                                        "imageSource": "https://cdn-icons-png.flaticon.com/512/3133/3133139.png",
+                                        "imageSource": "https://img.icons8.com/isometric/512/chess-king.png",
                                         "value": "matches"
                                     },
                                     {
                                         "primaryText": data["MENU_PUZZLES"],
-                                        "imageSource": "https://cdn-icons-png.flaticon.com/512/1008/1008986.png",
+                                        "imageSource": "https://img.icons8.com/isometric/512/puzzle.png",
                                         "value": "puzzles"
                                     },
                                     {
                                         "primaryText": data["MENU_SQUARES"],
-                                        "imageSource": "https://cdn-icons-png.flaticon.com/512/3067/3067160.png",
+                                        "imageSource": "https://img.icons8.com/isometric/512/checkered-flag.png",
                                         "value": "squares"
                                     }
-                                ]
+                                ],
+                                "hintText": data["HELP_MSG"]
                             }
                         }
                     }
