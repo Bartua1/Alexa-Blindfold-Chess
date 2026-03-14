@@ -2,6 +2,8 @@ import logging
 import traceback
 from flask import Flask, request, jsonify, Response
 import json
+import io
+from PIL import Image, ImageDraw
 from lambda_function import lambda_handler
 
 # Set up logging
@@ -32,6 +34,47 @@ def alexa_skill():
         logger.error(f"Error handling request: {e}")
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
+
+@app.route('/chessboard', methods=['GET'])
+def get_chessboard():
+    """Generates a chessboard image with optional highlighting."""
+    highlight = request.args.get('highlight', '').lower()
+    size = 600
+    square_size = size // 8
+    
+    # Colors for the premium light chess style
+    color_light = (240, 217, 181)  # Wood-ish light
+    color_dark = (181, 136, 99)    # Wood-ish dark
+    color_highlight = (100, 200, 100, 180) # Semi-transparent green
+    
+    img = Image.new('RGB', (size, size), color_light)
+    draw = ImageDraw.Draw(img, 'RGBA')
+    
+    # Draw squares
+    for row in range(8):
+        for col in range(8):
+            if (row + col) % 2 == 1:
+                x0 = col * square_size
+                y0 = row * square_size
+                x1 = x0 + square_size
+                y1 = y0 + square_size
+                draw.rectangle([x0, y0, x1, y1], fill=color_dark)
+    
+    # Highlight square if requested
+    if len(highlight) == 2 and highlight[0] in 'abcdefgh' and highlight[1] in '12345678':
+        col = ord(highlight[0]) - ord('a')
+        row = 8 - int(highlight[1])
+        x0 = col * square_size
+        y0 = row * square_size
+        x1 = x0 + square_size
+        y1 = y0 + square_size
+        draw.rectangle([x0, y0, x1, y1], fill=color_highlight, outline="green", width=3)
+        
+    # Serve as PNG
+    img_io = io.BytesIO()
+    img.save(img_io, 'PNG')
+    img_io.seek(0)
+    return Response(img_io.read(), mimetype='image/png')
 
 @app.errorhandler(500)
 def server_error(e):

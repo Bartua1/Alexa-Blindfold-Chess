@@ -1,0 +1,78 @@
+{
+  "type": "APL",
+  "version": "2024.3",
+  "theme": "light",
+  "import": [
+    {
+      "name": "alexa-layouts",
+      "version": "1.7.0"
+    }
+  ],
+  "mainTemplate": {
+    "parameters": [
+      "squaresData"
+    ],
+    "items": [
+      {
+        "type": "Container",
+        "width": "100%",
+        "height": "100%",
+        "items": [
+          {
+            "type": "Image",
+            "source": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
+            "width": "100%",
+            "height": "100%",
+            "scale": "best-fill",
+            "position": "absolute"
+          },
+          {
+            "type": "AlexaHeader",
+            "headerTitle": "${squaresData.title}",
+            "headerDivider": true,
+            "theme": "light"
+          },
+          {
+            "type": "Container",
+            "width": "100%",
+            "flexGrow": 1,
+            "alignItems": "center",
+            "justifyContent": "center",
+            "items": [
+              {
+                "type": "Frame",
+                "width": "80vh",
+                "height": "80vh",
+                "borderRadius": "16dp",
+                "backgroundColor": "white",
+                "padding": "10dp",
+                "item": {
+                  "type": "Image",
+                  "source": "${squaresData.boardUrl}",
+                  "width": "100%",
+                  "height": "100%",
+                  "scale": "best-fit"
+                }
+              },
+              {
+                "type": "Text",
+                "text": "${squaresData.feedback}",
+                "color": "${squaresData.isCorrect ? 'green' : 'red'}",
+                "fontSize": "36dp",
+                "fontWeight": "bold",
+                "paddingTop": "20dp"
+              },
+              {
+                "type": "Text",
+                "text": "${squaresData.currentQuestion}",
+                "color": "black",
+                "fontSize": "28dp",
+                "paddingTop": "10dp"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

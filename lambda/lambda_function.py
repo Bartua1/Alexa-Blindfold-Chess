@@ -22,11 +22,19 @@ import os
 # Get path to APL folder
 APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
 
-def get_board_image_url(fen):
-    """Returns a URL to a rendered board image using a 3rd party service."""
-    # Using fen-to-image for a cleaner look
-    encoded_fen = fen.replace(" ", "%20")
-    return f"https://fen-to-image.com/image/{encoded_fen}"
+def get_board_image_url(fen=None, highlight=None):
+    """Returns a URL to a rendered board image using the local server."""
+    base_url = "https://bartualfdez.asuscomm.com/blindfoldchess/chessboard"
+    if highlight:
+        return f"{base_url}?highlight={highlight}"
+    
+    # Fallback to fen-to-image for standard matches if no local fen renderer is implemented yet
+    # But for squares mode, we only need the local highlighted board
+    if fen:
+        encoded_fen = fen.replace(" ", "%20")
+        return f"https://fen-to-image.com/image/{encoded_fen}"
+    
+    return base_url
 
 def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="board"):
     """Generates the APL RenderDocument directive if supported."""
@@ -67,6 +75,28 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                                 }
                             ],
                             "hintText": data["HELP_MSG"]
+                        }
+                    }
+                )
+            
+            if type == "squares":
+                path = os.path.join(APL_PATH, "squares.json")
+                with open(path) as f:
+                    apl_doc = json.load(f)
+                
+                # 'engine' here is used to pass squaresData dict for squares mode
+                # last_move is used to pass current_question
+                squares_data = engine if isinstance(engine, dict) else {}
+                
+                return RenderDocumentDirective(
+                    document=apl_doc,
+                    datasources={
+                        "squaresData": {
+                            "title": data["MENU_SQUARES"],
+                            "boardUrl": squares_data.get("boardUrl", get_board_image_url()),
+                            "feedback": squares_data.get("feedback", ""),
+                            "isCorrect": squares_data.get("isCorrect", True),
+                            "currentQuestion": squares_data.get("currentQuestion", "")
                         }
                     }
                 )
@@ -192,7 +222,18 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
             square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
             attr["current_square"] = square
             speech_text = data["SQUARES_MODE_START"].format(square=square)
-            return handler_input.response_builder.speak(speech_text).ask(speech_text).response
+            
+            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+            squares_info = {
+                "boardUrl": get_board_image_url(), # No highlight on first load
+                "feedback": "",
+                "isCorrect": True,
+                "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square
+            }
+            directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+            if directive:
+                response_builder.add_directive(directive)
+            return response_builder.response
         
         if mode == "puzzles":
             # Just trigger puzzle logic
@@ -294,17 +335,37 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         attr = handler_input.attributes_manager.session_attributes
         
         user_color = get_resolved_value(handler_input.request_envelope.request.intent.slots["color"])
-        correct_color = get_square_color(attr.get("current_square"))
+        current_square = attr.get("current_square")
+        correct_color = get_square_color(current_square)
         
-        # Comparison (resolved value should be 'white' or 'black' from the interaction model)
-        if user_color and user_color.lower() == correct_color:
-            new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
-            attr["current_square"] = new_square
+        is_correct = user_color and user_color.lower() == correct_color
+        
+        # Always get a new square
+        new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
+        attr["current_square"] = new_square
+        
+        if is_correct:
             speech_text = data["NEXT_SQUARE"].format(square=new_square)
+            feedback_text = data["CORRECT_ANSWER"]
         else:
-            speech_text = data["WRONG_ANSWER"]
+            speech_text = f"{data['WRONG_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
+            feedback_text = data["WRONG_ANSWER"]
             
-        return handler_input.response_builder.speak(speech_text).ask(speech_text).response
+        response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+        
+        # Add APL for Squares Mode
+        squares_info = {
+            "boardUrl": get_board_image_url(highlight=current_square),
+            "feedback": feedback_text,
+            "isCorrect": is_correct,
+            "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square
+        }
+        
+        directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+        if directive:
+            response_builder.add_directive(directive)
+            
+        return response_builder.response
 
 class PuzzleIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):

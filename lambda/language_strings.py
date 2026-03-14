@@ -78,7 +78,7 @@ data = {
             "MENU_PUZZLES": "Puzzles",
             "MENU_PUZZLES_SUB": "Resuelve retos",
             "MENU_SQUARES": "Casillas",
-            "MENU_SQUARES_SUB": "Visualiza el tablero"
+            "MENU_SQUARES_SUB": "Entrena tu visualización"
         }
     }
 }
