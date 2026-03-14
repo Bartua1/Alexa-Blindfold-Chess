@@ -45,21 +45,24 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                     document=apl_doc,
                     datasources={
                         "payload": {
-                            "menuData": {
+                            "imageListData": {
                                 "title": data["MENU_TITLE"],
                                 "listItems": [
                                     {
                                         "primaryText": data["MENU_MATCHES"],
+                                        "secondaryText": "Play against AI",
                                         "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
                                         "value": "matches"
                                     },
                                     {
                                         "primaryText": data["MENU_PUZZLES"],
+                                        "secondaryText": "Solve challenges",
                                         "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
                                         "value": "puzzles"
                                     },
                                     {
                                         "primaryText": data["MENU_SQUARES"],
+                                        "secondaryText": "Visualize board",
                                         "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
                                         "value": "squares"
                                     }

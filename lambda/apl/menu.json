@@ -1,6 +1,7 @@
 {
   "type": "APL",
-  "version": "1.7",
+  "version": "2024.3",
+  "theme": "light",
   "import": [
     {
       "name": "alexa-layouts",
@@ -15,16 +16,16 @@
       {
         "type": "AlexaImageList",
         "id": "menuList",
-        "headerTitle": "${payload.menuData.title}",
+        "headerTitle": "${payload.imageListData.title}",
         "headerBackButton": false,
         "headerDivider": true,
         "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
         "backgroundBlur": false,
-        "backgroundColorOverlay": true,
-        "imageAspectRatio": "portrait",
+        "backgroundColorOverlay": false,
+        "imageAspectRatio": "square",
         "imageMetadataPrimacy": true,
         "imageScale": "best-fit",
-        "listItems": "${payload.menuData.listItems}",
+        "listItems": "${payload.imageListData.listItems}",
         "primaryAction": [
           {
             "type": "SendEvent",
