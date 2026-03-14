@@ -45,7 +45,8 @@ def get_chessboard():
     try:
         highlight = request.args.get('highlight', '').lower()
         fen = request.args.get('fen', '')
-        logger.info(f"Generating chessboard image. Highlight: {highlight}, FEN: {fen}")
+        squares_param = request.args.get('squares', '') # e.g. "e4:C,f5:W"
+        logger.info(f"Generating chessboard image. Highlight: {highlight}, FEN: {fen}, Squares: {squares_param}")
         
         size = 600
         square_size = size // 8
@@ -53,7 +54,10 @@ def get_chessboard():
         # Colors for the premium light chess style
         color_light = (240, 217, 181, 255)  # Wood-ish light
         color_dark = (181, 136, 99, 255)    # Wood-ish dark
-        color_highlight = (100, 200, 100, 180) # Semi-transparent green
+        
+        color_highlight = (25, 118, 210, 180) # Semi-transparent blue for current prompt
+        color_correct = (46, 125, 50, 180)    # Semi-transparent green for correct
+        color_wrong = (198, 40, 40, 180)      # Semi-transparent red for wrong
         
         # Mapping pieces to solid Unicode figures
         UNICODE_PIECES = {
@@ -74,6 +78,32 @@ def get_chessboard():
                     y1 = y0 + square_size
                     draw.rectangle([x0, y0, x1, y1], fill=color_dark)
         
+        # Draw history squares
+        if squares_param:
+            for s in squares_param.split(','):
+                if ':' in s:
+                    sq, res = s.split(':')
+                    if len(sq) == 2 and sq[0] in 'abcdefgh' and sq[1] in '12345678':
+                        col = ord(sq[0]) - ord('a')
+                        row = 8 - int(sq[1])
+                        x0 = col * square_size
+                        y0 = row * square_size
+                        x1 = x0 + square_size
+                        y1 = y0 + square_size
+                        fill_color = color_correct if res == 'C' else color_wrong
+                        draw.rectangle([x0, y0, x1, y1], fill=fill_color)
+
+        # Highlight square if requested (current question)
+        if len(highlight) == 2 and highlight[0] in 'abcdefgh' and highlight[1] in '12345678':
+            col = ord(highlight[0]) - ord('a')
+            row = 8 - int(highlight[1])
+            x0 = col * square_size
+            y0 = row * square_size
+            x1 = x0 + square_size
+            y1 = y0 + square_size
+            # Highlight with semi-transparent blue
+            draw.rectangle([x0, y0, x1, y1], fill=color_highlight, outline=(0, 0, 100, 255), width=4)
+            
         # Draw pieces if FEN is provided
         if fen:
             try:

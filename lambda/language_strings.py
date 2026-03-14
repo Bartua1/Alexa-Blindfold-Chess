@@ -21,6 +21,9 @@ data = {
             "NEXT_PUZZLE": "Here is the next challenge. {description}. What is your move?",
             "PUZZLE_RETRY": "Give it another try. {description}",
             "READY_FOR_NEXT": "Ready for the next puzzle?",
+            "SQUARES_COMPLETED": "Congratulations! You have completed the board.",
+            "SQUARES_SUMMARY": "Total time: {time}. Accuracy: {accuracy}%. Would you like to play again?",
+            "SQUARES_SUMMARY_TITLE": "Squares - Summary",
             "BOARD_DESCRIPTION": "The board status is: White pieces: {white_pieces}. Black pieces: {black_pieces}.",
             "PIECE_POSITION": "{piece} at {square}",
             "PIECES": {
@@ -76,6 +79,9 @@ data = {
             "NEXT_PUZZLE": "Aquí tienes el siguiente reto. {description}. ¿Cuál es tu movimiento?",
             "PUZZLE_RETRY": "Inténtalo de nuevo. {description}",
             "READY_FOR_NEXT": "¿Preparado para el siguiente puzzle?",
+            "SQUARES_COMPLETED": "¡Enhorabuena! Has completado todo el tablero.",
+            "SQUARES_SUMMARY": "Tiempo total: {time}. Precisión: {accuracy}%. ¿Quieres jugar de nuevo?",
+            "SQUARES_SUMMARY_TITLE": "Visualización - Resumen",
             "BOARD_DESCRIPTION": "El estado del tablero es: Piezas blancas: {white_pieces}. Piezas negras: {black_pieces}.",
             "PIECE_POSITION": "{piece} en {square}",
             "PIECES": {

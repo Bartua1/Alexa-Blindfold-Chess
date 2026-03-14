@@ -23,7 +23,7 @@ import os
 # Get path to APL folder
 APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
 
-def get_board_image_url(fen=None, highlight=None):
+def get_board_image_url(fen=None, highlight=None, squares=None):
     """Returns a URL to a rendered board image using the local server."""
     base_url = "https://bartualfdez.asuscomm.com/blindfoldchess/chessboard"
     
@@ -32,6 +32,8 @@ def get_board_image_url(fen=None, highlight=None):
         params.append(f"highlight={highlight}")
     if fen:
         params.append(f"fen={fen.replace(' ', '%20')}")
+    if squares:
+        params.append(f"squares={squares}")
         
     if params:
         return f"{base_url}?{'&'.join(params)}"
@@ -327,7 +329,12 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         attr["mode"] = mode
 
         if mode == "squares":
-            square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
+            attr["squares_history"] = {}
+            attr["squares_correct_count"] = 0
+            attr["squares_start_timestamp"] = time.time()
+            
+            all_squares = [f"{f}{r}" for f in "abcdefgh" for r in "12345678"]
+            square = random.choice(all_squares)
             attr["current_square"] = square
             attr["start_time"] = time.time()
             speech_text = data["SQUARES_MODE_START"].format(square=square)
@@ -486,12 +493,16 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         
         is_correct = user_color and user_color.lower() == correct_color
         
-        # Always get a new square
-        new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
-        attr["current_square"] = new_square
+        # Track history
+        history = attr.get("squares_history", {})
+        history[current_square] = "C" if is_correct else "W"
+        attr["squares_history"] = history
+        if is_correct:
+            attr["squares_correct_count"] = attr.get("squares_correct_count", 0) + 1
 
-        # Calculate time taken
-        elapsed_time = round(time.time() - attr.get("start_time", time.time()), 1)
+        # Calculate time taken for THIS square
+        now = time.time()
+        elapsed_time = round(now - attr.get("start_time", now), 1)
         last_time = attr.get("last_time")
         arrow = ""
         if last_time is not None:
@@ -499,35 +510,77 @@ class SquareColorIntentHandler(AbstractRequestHandler):
                 arrow = "↓"
             elif elapsed_time > last_time:
                 arrow = "↑"
+        attr["last_time"] = elapsed_time
+        attr["start_time"] = now
 
+        # Convert history to string for server
+        squares_param = ",".join([f"{k}:{v}" for k, v in history.items()])
+        
         color_green = "#2E7D32"
         color_red = "#C62828"
-        
-        attr["last_time"] = elapsed_time
-        attr["start_time"] = time.time() # Reset for next
         
         # Determine color for time based on trend
         time_color = color_green if last_time is None or elapsed_time <= last_time else color_red
         time_text = f"<font color='{time_color}'>{data['TIME_TAKEN_LABEL'].format(time=elapsed_time, arrow=arrow)}</font>"
         
+        # Check if completed
+        all_squares = [f"{f}{r}" for f in "abcdefgh" for r in "12345678"]
+        remaining = [s for s in all_squares if s not in history]
+        
+        if not remaining:
+            # Completion!
+            total_time_seconds = int(now - attr.get("squares_start_timestamp", now))
+            minutes = total_time_seconds // 60
+            seconds = total_time_seconds % 60
+            time_str = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
+            
+            correct_count = attr.get("squares_correct_count", 0)
+            accuracy = int((correct_count / 64) * 100)
+            
+            speech_text = data.get("SQUARES_COMPLETED", "Congratulations! You have completed the board.") + " "
+            speech_text += data.get("SQUARES_SUMMARY", "Total time: {time}. Accuracy: {accuracy}%. Would you like to play again?").format(
+                time=time_str, accuracy=accuracy)
+            
+            # Clear state so user can restart or switch mode
+            attr["mode"] = "squares_summary" # Temporary mode to handle Yes/No
+            
+            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+            
+            squares_info = {
+                "boardUrl": get_board_image_url(squares=squares_param),
+                "feedback": f"<font color='{color_green}'>{data['SQUARES_COMPLETED']}</font>",
+                "isCorrect": True,
+                "currentQuestion": data.get("SQUARES_SUMMARY_TITLE", "Session Summary"),
+                "timeText": f"Time: {time_str} | Accuracy: {accuracy}%",
+                "ratingNumber": 5 if accuracy == 100 else (accuracy // 20)
+            }
+            
+            directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+            if directive:
+                response_builder.add_directive(directive)
+            return response_builder.response
+
+        # Not completed, get next square
+        new_square = random.choice(remaining)
+        attr["current_square"] = new_square
+        
+        feedback_msg = data['CORRECT_ANSWER'] if is_correct else data['WRONG_ANSWER']
+        speech_text = f"{feedback_msg} {data['NEXT_SQUARE'].format(square=new_square)}"
+        feedback_text = f"<font color='{color_green if is_correct else color_red}'>{feedback_msg}</font>"
+        
+        # Rating logic for correct answers
         if is_correct:
-            speech_text = f"{data['CORRECT_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
-            feedback_text = f"<font color='{color_green}'>{data['CORRECT_ANSWER']}</font>"
-            # Rating logic for correct answers
             if elapsed_time < 10:
                 rating_number = 5
             else:
                 rating_number = max(0, 5.0 - ((elapsed_time - 10) // 5 + 1) * 0.5)
         else:
-            speech_text = f"{data['WRONG_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
-            feedback_text = f"<font color='{color_red}'>{data['WRONG_ANSWER']}</font>"
             rating_number = 0
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
-        # Add APL for Squares Mode
         squares_info = {
-            "boardUrl": get_board_image_url(highlight=new_square),
+            "boardUrl": get_board_image_url(highlight=new_square, squares=squares_param),
             "feedback": feedback_text,
             "isCorrect": is_correct,
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
@@ -668,6 +721,10 @@ class YesIntentHandler(AbstractRequestHandler):
         attr = handler_input.attributes_manager.session_attributes
         mode = attr.get("mode")
         
+        if mode == "squares_summary":
+            # Restart Squares mode
+            return SwitchModeIntentHandler().handle(handler_input)
+            
         if mode == "puzzles":
             return PuzzleIntentHandler().handle(handler_input)
             
@@ -685,6 +742,16 @@ class NoIntentHandler(AbstractRequestHandler):
         attr = handler_input.attributes_manager.session_attributes
         mode = attr.get("mode", "matches")
         
+        if mode == "squares_summary":
+            # Return to menu
+            attr["mode"] = "none"
+            speech_text = data["WELCOME_MSG"]
+            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+            directive = get_apl_directive(handler_input, type="menu")
+            if directive:
+                response_builder.add_directive(directive)
+            return response_builder.response
+
         speech_key = f"GOODBYE_{mode.upper()}"
         speech_text = data.get(speech_key, data["GOODBYE_MSG"])
         
