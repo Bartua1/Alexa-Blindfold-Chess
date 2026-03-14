@@ -1,3 +1,4 @@
+import os
 import logging
 import traceback
 from flask import Flask, request, jsonify, Response
@@ -5,6 +6,9 @@ import json
 import io
 from PIL import Image, ImageDraw
 from lambda_function import lambda_handler
+
+import chess
+from PIL import Image, ImageDraw, ImageFont
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -37,17 +41,18 @@ def alexa_skill():
 
 @app.route('/chessboard', methods=['GET'])
 def get_chessboard():
-    """Generates a chessboard image with optional highlighting."""
+    """Generates a chessboard image with optional highlighting and pieces from FEN."""
     try:
         highlight = request.args.get('highlight', '').lower()
-        logger.info(f"Generating chessboard image. Highlight: {highlight}")
+        fen = request.args.get('fen', '')
+        logger.info(f"Generating chessboard image. Highlight: {highlight}, FEN: {fen}")
         
         size = 600
         square_size = size // 8
         
         # Colors for the premium light chess style
-        color_light = (240, 217, 181, 255)  # Wood-ish light (added Alpha)
-        color_dark = (181, 136, 99, 255)    # Wood-ish dark (added Alpha)
+        color_light = (240, 217, 181, 255)  # Wood-ish light
+        color_dark = (181, 136, 99, 255)    # Wood-ish dark
         color_highlight = (100, 200, 100, 180) # Semi-transparent green
         
         # Use RGBA to support transparency for the highlight
@@ -64,6 +69,49 @@ def get_chessboard():
                     y1 = y0 + square_size
                     draw.rectangle([x0, y0, x1, y1], fill=color_dark)
         
+        # Draw pieces if FEN is provided
+        if fen:
+            try:
+                # Load font - using common fonts on macOS
+                # Fallback list for cross-platform robustness
+                font_paths = [
+                    "/Users/bartua1/Library/Fonts/JetBrainsMonoNerdFont-Regular.ttf",
+                    "/System/Library/Fonts/Supplemental/Arial.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" 
+                ]
+                font = None
+                for path in font_paths:
+                    if os.path.exists(path):
+                        font = ImageFont.truetype(path, int(square_size * 0.7))
+                        break
+                
+                if not font:
+                    font = ImageFont.load_default()
+
+                board = chess.Board(fen)
+                for square in chess.SQUARES:
+                    piece = board.piece_at(square)
+                    if piece:
+                        col = chess.square_column(square)
+                        row = 7 - chess.square_row(square)
+                        
+                        x = col * square_size + square_size // 2
+                        y = row * square_size + square_size // 2
+                        
+                        symbol = piece.symbol().upper()
+                        # Color: White pieces white with black outline, Black pieces black with white outline
+                        if piece.color == chess.WHITE:
+                            fill_color = (255, 255, 255, 255)
+                            stroke_color = (0, 0, 0, 255)
+                        else:
+                            fill_color = (0, 0, 0, 255)
+                            stroke_color = (255, 255, 255, 255)
+                        
+                        draw.text((x, y), symbol, fill=fill_color, font=font, anchor="mm", 
+                                  stroke_width=2, stroke_fill=stroke_color)
+            except Exception as e:
+                logger.error(f"Error drawing pieces: {e}")
+
         # Highlight square if requested
         if len(highlight) == 2 and highlight[0] in 'abcdefgh' and highlight[1] in '12345678':
             col = ord(highlight[0]) - ord('a')

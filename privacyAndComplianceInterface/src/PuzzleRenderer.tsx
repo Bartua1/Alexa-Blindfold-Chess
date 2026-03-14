@@ -6,6 +6,7 @@ import { toPng } from 'html-to-image';
 const PuzzleRenderer = () => {
   const [searchParams] = useSearchParams();
   const fen = searchParams.get('fen') || 'start';
+  const showUI = searchParams.get('ui') !== 'false';
   const boardRef = useRef<HTMLDivElement>(null);
 
   const downloadImage = () => {
@@ -24,6 +25,23 @@ const PuzzleRenderer = () => {
         console.error('oops, something went wrong!', err);
       });
   };
+
+  if (!showUI) {
+    return (
+      <div className="board-wrapper" ref={boardRef} style={{ width: '600px', height: '600px' }}>
+        <Chessboard 
+          position={fen} 
+          boardWidth={600}
+          customBoardStyle={{
+            borderRadius: '0px',
+            boxShadow: 'none'
+          }}
+          customDarkSquareStyle={{ backgroundColor: '#b58863' }}
+          customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="puzzle-renderer-container">

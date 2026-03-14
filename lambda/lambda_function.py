@@ -26,12 +26,15 @@ APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
 def get_board_image_url(fen=None, highlight=None):
     """Returns a URL to a rendered board image using the local server."""
     base_url = "https://bartualfdez.asuscomm.com/blindfoldchess/chessboard"
-    if highlight:
-        return f"{base_url}?highlight={highlight}"
     
-    # Use local Vite renderer for FEN if requested
+    params = []
+    if highlight:
+        params.append(f"highlight={highlight}")
     if fen:
-        return f"https://bartualfdez.asuscomm.com/blindfoldchess/render-puzzle?fen={fen.replace(' ', '%20')}"
+        params.append(f"fen={fen.replace(' ', '%20')}")
+        
+    if params:
+        return f"{base_url}?{'&'.join(params)}"
     
     return base_url
 
