@@ -10,7 +10,7 @@
     ],
     "mainTemplate": {
         "parameters": [
-            "payload"
+            "squaresData"
         ],
         "items": [
             {
@@ -18,27 +18,27 @@
                 "id": "squaresDetail",
                 "detailType": "location",
                 "detailImageAlignment": "left",
-                "headerTitle": "${payload.detailImageRightData.title}",
-                "headerSubtitle": "${payload.detailImageRightData.subtitle}",
+                "headerTitle": "${squaresData.title}",
+                "headerSubtitle": "${squaresData.feedback}",
                 "headerBackButton": true,
-                "headerAttributionImage": "${payload.detailImageRightData.logoUrl}",
+                "headerAttributionImage": "${squaresData.logoUrl}",
                 "imageBlurredBackground": false,
-                "imageScale": "best-fill",
+                "imageScale": "best-fit",
                 "imageAspectRatio": "square",
                 "imageAlignment": "right",
-                "imageSource": "${payload.detailImageRightData.image.sources[0].url}",
-                "imageCaption": "${payload.detailImageRightData.image.contentDescription}",
-                "primaryText": "${payload.detailImageRightData.textContent.primaryText.text}",
+                "imageSource": "${squaresData.boardUrl}",
+                "imageCaption": "Chessboard",
+                "primaryText": "${squaresData.currentQuestion}",
                 "ratingSlotMode": "multiple",
-                "ratingNumber": "${payload.detailImageRightData.textContent.rating.number}",
-                "ratingText": "${payload.detailImageRightData.textContent.rating.text}",
-                "locationText": "${payload.detailImageRightData.textContent.locationText.text}",
-                "secondaryText": "${payload.detailImageRightData.textContent.secondaryText.text}",
-                "button1Text": "${payload.detailImageRightData.buttons[0].text}",
-                "button2Text": "${payload.detailImageRightData.buttons[1].text}",
+                "ratingNumber": 0,
+                "ratingText": "",
+                "locationText": "",
+                "secondaryText": "${squaresData.timeText}",
+                "button1Text": "Next",
+                "button2Text": "Stop",
                 "button1Theme": "dark",
                 "button2Theme": "dark",
-                "backgroundImageSource": "${payload.detailImageRightData.backgroundImage.sources[0].url}",
+                "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
                 "theme": "dark"
             }
         ]

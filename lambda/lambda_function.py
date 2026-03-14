@@ -90,26 +90,13 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 return RenderDocumentDirective(
                     document=apl_doc,
                     datasources={
-                        "payload": {
-                            "detailImageRightData": {
-                                "title": squares_data.get("title", data["MENU_SQUARES"]),
-                                "subtitle": squares_data.get("feedback", ""),
-                                "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
-                                "image": {
-                                    "sources": [{"url": squares_data.get("boardUrl", get_board_image_url())}],
-                                    "contentDescription": "Chessboard"
-                                },
-                                "textContent": {
-                                    "primaryText": {"text": squares_data.get("currentQuestion", "")},
-                                    "secondaryText": {"text": squares_data.get("timeText", "")},
-                                    "rating": {"number": 0, "text": ""},
-                                    "locationText": {"text": ""}
-                                },
-                                "buttons": [{"text": "Next"}, {"text": "Stop"}],
-                                "backgroundImage": {
-                                    "sources": [{"url": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png"}]
-                                }
-                            }
+                        "squaresData": {
+                            "title": squares_data.get("title", data["MENU_SQUARES"]),
+                            "feedback": squares_data.get("feedback", ""),
+                            "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
+                            "boardUrl": squares_data.get("boardUrl", get_board_image_url()),
+                            "currentQuestion": squares_data.get("currentQuestion", ""),
+                            "timeText": squares_data.get("timeText", "")
                         }
                     }
                 )
