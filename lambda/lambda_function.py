@@ -32,12 +32,14 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
     """Generates the APL RenderDocument directive if supported."""
     try:
         context = handler_input.request_envelope.context
-        # Use get_supported_interfaces utility for cleaner APL check
-        interfaces = handler_input.request_envelope.context.system.device.supported_interfaces
-        logger.info(f"Supported Interfaces: {interfaces}")
+        interfaces = context.system.device.supported_interfaces
+        viewport = getattr(context, "viewport", None)
         
-        if interfaces.alexa_presentation_apl is not None:
-            # Use absolute path for robustness in Lambda
+        logger.info(f"Supported Interfaces: {interfaces}")
+        logger.info(f"Viewport present: {viewport is not None}")
+        
+        # Robust check: either interface is present or a viewport is reported
+        if interfaces.alexa_presentation_apl is not None or viewport is not None:
             # Use absolute path for robustness in Lambda
             path = os.path.join(APL_PATH, "chessboard.json")
             with open(path) as f:
@@ -130,9 +132,9 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
             speech_text = data.get("HELP_MSG", "You can play a Match, practice with Puzzles, or train your visualization with Squares. Which one?")
             return handler_input.response_builder.speak(speech_text).ask(speech_text).response
             
-        attr["mode"] = mode
-        speech_text = data["MODE_SWITCHED"].format(mode=mode)
-        
+        if mode != "squares":
+            attr.pop("current_square", None)
+
         if mode == "squares":
             square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
             attr["current_square"] = square
@@ -177,7 +179,7 @@ class MoveIntentHandler(AbstractRequestHandler):
         
         if not success:
             logger.info(f"Invalid move attempted: {san_move} - {error_msg}")
-            speech_text = f"{san_move} " + data["ERROR_MSG"]
+            speech_text = data["INVALID_MOVE_RESPONSE"].format(move=san_move, error=error_msg)
             return (
                 handler_input.response_builder
                     .speak(speech_text)
@@ -189,7 +191,7 @@ class MoveIntentHandler(AbstractRequestHandler):
             solution = attr.get("puzzle_solution")
             # Loose comparison (solution might be UCI or SAN)
             if san_move.lower() == solution.lower() or error_msg.lower() == solution.lower():
-                speech_text = data["CORRECT_ANSWER"] + " Would you like another one?"
+                speech_text = data["CORRECT_ANSWER"] + " " + data["READY_FOR_NEXT"]
                 attr["puzzle_solved"] = True
             else:
                 speech_text = data["WRONG_ANSWER"]
@@ -205,7 +207,8 @@ class MoveIntentHandler(AbstractRequestHandler):
             speech_text = data["REFLECT_MOVE"].format(piece=piece, square=square) + " " + engine.get_game_result()
         else:
             ai_move = engine.get_ai_move()
-            speech_text = data["REFLECT_MOVE"].format(piece=piece, square=square) + f" I play {ai_move}. Your turn."
+            ai_text = data["AI_MOVE_RESPONSE"].format(move=ai_move)
+            speech_text = data["REFLECT_MOVE"].format(piece=piece, square=square) + " " + ai_text
             
             if engine.is_game_over():
                 speech_text += " " + engine.get_game_result()
@@ -236,11 +239,11 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
         
-        user_color = handler_input.request_envelope.request.intent.slots["color"].value
+        user_color = get_resolved_value(handler_input.request_envelope.request.intent.slots["color"])
         correct_color = get_square_color(attr.get("current_square"))
         
-        # Normalize comparison
-        if user_color.lower() in [correct_color, "blanco" if correct_color == "white" else "negro"]:
+        # Comparison (resolved value should be 'white' or 'black' from the interaction model)
+        if user_color and user_color.lower() == correct_color:
             new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
             attr["current_square"] = new_square
             speech_text = data["NEXT_SQUARE"].format(square=new_square)
@@ -264,17 +267,32 @@ class PuzzleIntentHandler(AbstractRequestHandler):
         data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
         
+        current_puzzle_id = attr.get("puzzle_id")
         puzzles = get_puzzles()
-        # Mix easy/medium for now
         all_puzzles = puzzles["easy"] + puzzles["medium"]
-        puzzle = random.choice(all_puzzles)
         
+        # Try to find a different puzzle if we are already in puzzles mode
+        available_puzzles = [p for p in all_puzzles if p["id"] != current_puzzle_id]
+        if not available_puzzles:
+            available_puzzles = all_puzzles
+            
+        puzzle = random.choice(available_puzzles)
+        
+        # Determine greeting
+        if attr.get("mode") == "puzzles":
+            if attr.get("puzzle_solved"):
+                speech_text = data["NEXT_PUZZLE"].format(description=puzzle["description"])
+            else:
+                # If they just asked for a puzzle while in the middle of one, maybe they want a new one or just a reminder
+                speech_text = data["PUZZLE_RETRY"].format(description=puzzle["description"])
+        else:
+            speech_text = data["PUZZLES_MODE_START"].format(description=puzzle["description"])
+            
         attr["mode"] = "puzzles"
         attr["board_fen"] = puzzle["fen"]
         attr["puzzle_solution"] = puzzle["solution"]
         attr["puzzle_id"] = puzzle["id"]
-        
-        speech_text = data["PUZZLES_MODE_START"].format(description=puzzle["description"])
+        attr["puzzle_solved"] = False
         
         engine = BoardManager(puzzle["fen"])
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
@@ -306,7 +324,12 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         data = handler_input.attributes_manager.request_attributes["_"]
-        speech_text = data["GOODBYE_MSG"]
+        attr = handler_input.attributes_manager.session_attributes
+        mode = attr.get("mode", "matches")
+        
+        speech_key = f"GOODBYE_{mode.upper()}"
+        speech_text = data.get(speech_key, data["GOODBYE_MSG"])
+            
         return (
             handler_input.response_builder
                 .speak(speech_text)
@@ -326,6 +349,36 @@ class FallbackIntentHandler(AbstractRequestHandler):
                 .ask(speech_text)
                 .response
         )
+
+class YesIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("AMAZON.YesIntent")(handler_input)
+
+    def handle(self, handler_input):
+        attr = handler_input.attributes_manager.session_attributes
+        mode = attr.get("mode")
+        
+        if mode == "puzzles":
+            return PuzzleIntentHandler().handle(handler_input)
+            
+        # Default behavior if not in a specific confirmable state
+        data = handler_input.attributes_manager.request_attributes["_"]
+        speech_text = data["HELP_MSG"]
+        return handler_input.response_builder.speak(speech_text).ask(speech_text).response
+
+class NoIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("AMAZON.NoIntent")(handler_input)
+
+    def handle(self, handler_input):
+        data = handler_input.attributes_manager.request_attributes["_"]
+        attr = handler_input.attributes_manager.session_attributes
+        mode = attr.get("mode", "matches")
+        
+        speech_key = f"GOODBYE_{mode.upper()}"
+        speech_text = data.get(speech_key, data["GOODBYE_MSG"])
+        
+        return handler_input.response_builder.speak(speech_text).response
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
@@ -369,6 +422,8 @@ sb.add_request_handler(SquareColorIntentHandler())
 sb.add_request_handler(PuzzleIntentHandler())
 sb.add_request_handler(MoveIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
+sb.add_request_handler(YesIntentHandler())
+sb.add_request_handler(NoIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
