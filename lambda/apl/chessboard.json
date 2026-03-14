@@ -1,7 +1,12 @@
 {
   "type": "APL",
   "version": "2023.2",
-  "import": [],
+  "import": [
+    {
+      "name": "alexa-layouts",
+      "version": "1.7.0"
+    }
+  ],
   "mainTemplate": {
     "parameters": [
       "payload"
@@ -11,23 +16,84 @@
         "type": "Container",
         "width": "100%",
         "height": "100%",
+        "backgroundColor": "#121212",
         "alignItems": "center",
         "justifyContent": "center",
         "items": [
           {
-            "type": "Image",
-            "source": "${payload.boardData.boardUrl}",
-            "width": "80vh",
-            "height": "80vh",
-            "scale": "best-fit"
+            "type": "Container",
+            "position": "absolute",
+            "width": "100%",
+            "height": "100%",
+            "items": [
+              {
+                "type": "Frame",
+                "width": "100%",
+                "height": "100%",
+                "backgroundColor": "transparent",
+                "background": {
+                  "type": "linear-gradient",
+                  "colorRange": [
+                    "#1a1a2e",
+                    "#16213e",
+                    "#0f3460"
+                  ],
+                  "angle": 135
+                }
+              }
+            ]
           },
           {
             "type": "Text",
-            "text": "Blindfold Chess - ${payload.boardData.status}",
+            "text": "BLINDFOLD CHESS",
+            "position": "absolute",
+            "top": "5%",
+            "fontSize": "32dp",
+            "fontWeight": "700",
+            "color": "#e94560",
+            "letterSpacing": "4dp"
+          },
+          {
+            "type": "Frame",
+            "width": "85vh",
+            "height": "85vh",
+            "borderRadius": "16dp",
+            "backgroundColor": "#ffffff10",
+            "borderWidth": "2dp",
+            "borderColor": "#e9456050",
+            "padding": "10dp",
+            "item": {
+              "type": "Image",
+              "source": "${payload.boardData.boardUrl}",
+              "width": "100%",
+              "height": "100%",
+              "scale": "best-fit"
+            }
+          },
+          {
+            "type": "Container",
             "position": "absolute",
             "bottom": "5%",
-            "fontSize": "24dp",
-            "color": "white"
+            "width": "90%",
+            "alignItems": "center",
+            "items": [
+              {
+                "type": "Text",
+                "text": "${payload.boardData.lastMove}",
+                "fontSize": "24dp",
+                "fontWeight": "300",
+                "color": "#ffffff",
+                "opacity": 0.8,
+                "paddingBottom": "10dp"
+              },
+              {
+                "type": "Text",
+                "text": "${payload.boardData.status}",
+                "fontSize": "28dp",
+                "fontWeight": "600",
+                "color": "#4ecca3"
+              }
+            ]
           }
         ]
       }

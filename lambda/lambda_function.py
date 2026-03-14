@@ -20,11 +20,11 @@ APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
 
 def get_board_image_url(fen):
     """Returns a URL to a rendered board image using a 3rd party service."""
-    # Using chess-board.com as a simple public renderer
+    # Using fen-to-image for a cleaner look
     encoded_fen = fen.replace(" ", "%20")
-    return f"https://www.chess-board.com/board.png?fen={encoded_fen}"
+    return f"https://fen-to-image.com/image/{encoded_fen}"
 
-def get_apl_directive(handler_input, engine):
+def get_apl_directive(handler_input, engine, last_move="Welcome!"):
     """Generates the APL RenderDocument directive if supported."""
     try:
         supported = getattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'alexa_presentation_apl', None)
@@ -41,7 +41,8 @@ def get_apl_directive(handler_input, engine):
                     "payload": {
                         "boardData": {
                             "boardUrl": get_board_image_url(engine.get_fen()),
-                            "status": engine.get_game_result()
+                            "status": engine.get_game_result(),
+                            "lastMove": last_move
                         }
                     }
                 }
@@ -115,7 +116,11 @@ class MoveIntentHandler(AbstractRequestHandler):
         response_builder = handler_input.response_builder.speak(speech_text).ask("Your move?")
         
         # Add APL if supported
-        directive = get_apl_directive(handler_input, engine)
+        last_move_text = f"You: {piece} to {square}"
+        if not engine.is_game_over():
+            last_move_text += f" | AI: {ai_move}"
+            
+        directive = get_apl_directive(handler_input, engine, last_move_text)
         if directive:
             response_builder.add_directive(directive)
             
