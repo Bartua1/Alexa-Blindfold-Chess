@@ -1,0 +1,105 @@
+{
+    "type": "APL",
+    "version": "2024.3",
+    "import": [
+        {
+            "name": "alexa-layouts",
+            "version": "1.7.0"
+        }
+    ],
+    "mainTemplate": {
+        "parameters": [
+            "matchData"
+        ],
+        "items": [
+            {
+                "type": "Container",
+                "width": "100%",
+                "height": "100%",
+                "items": [
+                    {
+                        "type": "Image",
+                        "source": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
+                        "scale": "best-fill",
+                        "width": "100%",
+                        "height": "100%",
+                        "position": "absolute"
+                    },
+                    {
+                        "type": "AlexaHeader",
+                        "headerTitle": "${matchData.title}",
+                        "headerSubtitle": "${matchData.subtitle}",
+                        "headerAttributionImage": "${matchData.logoUrl}",
+                        "headerBackButton": true
+                    },
+                    {
+                        "type": "Container",
+                        "direction": "row",
+                        "grow": 1,
+                        "paddingLeft": "@spacingMedium",
+                        "paddingRight": "@spacingMedium",
+                        "items": [
+                            {
+                                "type": "Container",
+                                "width": "45%",
+                                "height": "100%",
+                                "justifyContent": "center",
+                                "items": [
+                                    {
+                                        "type": "Image",
+                                        "source": "${matchData.boardUrl}",
+                                        "scale": "best-fit",
+                                        "width": "100%",
+                                        "aspectRatio": 1
+                                    },
+                                    {
+                                        "type": "Text",
+                                        "text": "${matchData.lastMove}",
+                                        "style": "textStyleBody",
+                                        "textAlign": "center",
+                                        "marginTop": "@spacingSmall"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Container",
+                                "width": "55%",
+                                "height": "100%",
+                                "paddingLeft": "@spacingLarge",
+                                "items": [
+                                    {
+                                        "type": "Text",
+                                        "text": "Move History",
+                                        "style": "textStyleSubhead",
+                                        "fontWeight": "bold",
+                                        "color": "@colorTextPrimary"
+                                    },
+                                    {
+                                        "type": "ScrollView",
+                                        "grow": 1,
+                                        "marginTop": "@spacingSmall",
+                                        "item": {
+                                            "type": "Text",
+                                            "text": "${matchData.moveHistory}",
+                                            "style": "textStyleBody",
+                                            "lineHeight": 1.5
+                                        }
+                                    },
+                                    {
+                                        "type": "Text",
+                                        "text": "${matchData.status}",
+                                        "style": "textStyleBody",
+                                        "fontWeight": "bold",
+                                        "color": "red",
+                                        "marginTop": "@spacingMedium",
+                                        "when": "${matchData.status != ''}"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

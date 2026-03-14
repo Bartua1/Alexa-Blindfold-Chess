@@ -11,12 +11,11 @@ class BoardManager:
     def get_fen(self):
         return self.board.fen()
 
-    def make_move(self, move_san):
-        """Attempts to make a move from SAN string (e.g., 'e4', 'Nf3')."""
         try:
             move = self.board.parse_san(move_san)
+            san_actual = self.board.san(move)
             self.board.push(move)
-            return True, move.uci()
+            return True, san_actual
         except Exception:
             return False, "Illegal move"
 

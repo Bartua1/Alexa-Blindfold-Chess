@@ -124,7 +124,35 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                     }
                 )
             
-            # Default to board
+            if type == "matches":
+                path = os.path.join(APL_PATH, "match.json")
+                with open(path) as f:
+                    apl_doc = json.load(f)
+                
+                fen = engine.get_fen() if engine else "8/8/8/8/8/8/8/8"
+                status = engine.get_game_result() if engine else ""
+                
+                # Fetch move history from session attributes
+                attr = handler_input.attributes_manager.session_attributes
+                move_history_list = attr.get("move_history", [])
+                move_history_text = format_move_history(move_history_list)
+                
+                return RenderDocumentDirective(
+                    document=apl_doc,
+                    datasources={
+                        "matchData": {
+                            "title": data["MENU_MATCHES"],
+                            "subtitle": data.get("MOVE_HISTORY_LABEL", "Move History") if move_history_list else data["WELCOME_MSG"],
+                            "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
+                            "boardUrl": get_board_image_url(fen),
+                            "lastMove": last_move,
+                            "moveHistory": move_history_text,
+                            "status": status if status != "ONGOING" else ""
+                        }
+                    }
+                )
+            
+            # Default to board (old standard view)
             path = os.path.join(APL_PATH, "chessboard.json")
             with open(path) as f:
                 apl_doc = json.load(f)
@@ -166,6 +194,43 @@ def get_verbal_board_description(engine, data):
         white_pieces=white_pieces, 
         black_pieces=black_pieces
     )
+
+def get_localized_move(san_move, data):
+    """Translates a SAN move like 'Nf3' to a spoken description like 'Knight to f3'."""
+    if not san_move:
+        return ""
+        
+    is_spanish = "Resuelve" in data.get("SOLVE_PUZZLE", "")
+    
+    # Castling
+    if san_move == "O-O":
+        return "Enroque corto" if is_spanish else "Kingside castle"
+    if san_move == "O-O-O":
+        return "Enroque largo" if is_spanish else "Queenside castle"
+        
+    piece_names = data.get("PIECE_NAMES", {})
+    
+    # Clean move from symbols like #, +, etc.
+    clean_move = san_move.replace("#", "").replace("+", "")
+    
+    if len(clean_move) >= 1 and clean_move[0].isupper() and clean_move[0] in piece_names:
+        piece_symbol = clean_move[0]
+        piece_name = piece_names[piece_symbol]
+        square = clean_move[-2:]
+        if "x" in san_move:
+            connector = " captura en " if is_spanish else " takes on "
+        else:
+            connector = " a " if is_spanish else " to "
+        return f"{piece_name}{connector}{square}"
+    else:
+        # Pawn move
+        if "x" in san_move:
+            piece_name = piece_names.get("", "Peón" if is_spanish else "Pawn")
+            square = clean_move[-2:]
+            connector = " captura en " if is_spanish else " takes on "
+            return f"{piece_name}{connector}{square}"
+        else:
+            return san_move # e.g. "e4"
 def get_puzzles():
     # Use path relative to this script for robust loading in any environment
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -183,6 +248,20 @@ def get_square_color(square):
     file = ord(square[0]) - ord('a')
     rank = int(square[1]) - 1
     return "black" if (file + rank) % 2 == 0 else "white"
+
+def format_move_history(moves):
+    """Formats a list of moves into a string like '1. e4 e5 2. Nf3'."""
+    if not moves:
+        return ""
+    
+    formatted = []
+    for i in range(0, len(moves), 2):
+        move_num = (i // 2) + 1
+        white_move = moves[i]
+        black_move = moves[i+1] if i + 1 < len(moves) else ""
+        formatted.append(f"{move_num}. {white_move} {black_move}".strip())
+    
+    return "  ".join(formatted)
 
 def get_resolved_value(slot):
     """Safely extracts the first resolved value from an Alexa slot."""
@@ -209,6 +288,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
         # Initialize board for Matches mode
         engine = BoardManager()
         attr["board_fen"] = engine.get_fen()
+        attr["move_history"] = []
         
         speech_text = data["WELCOME_MSG"]
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
@@ -270,8 +350,8 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         # Default back to matches
         engine = BoardManager(attr.get("board_fen"))
         speech_text = f"Switched to {mode}"
-        response_builder = handler_input.response_builder.speak(speech_text).ask("Your move?")
-        directive = get_apl_directive(handler_input, engine, speech_text)
+        response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
+        directive = get_apl_directive(handler_input, engine, speech_text, type="matches")
         if directive:
             response_builder.add_directive(directive)
         return response_builder.response
@@ -298,7 +378,12 @@ class MoveIntentHandler(AbstractRequestHandler):
         
         # Parse and execute player move
         san_move = BoardManager.parse_alexa_slots(piece, square)
-        success, error_msg = engine.make_move(san_move)
+        success, engine_move = engine.make_move(san_move)
+        
+        if success:
+            history = attr.get("move_history", [])
+            history.append(engine_move)
+            attr["move_history"] = history
         
         if not success:
             logger.info(f"Invalid move attempted: {san_move} - {error_msg}")
@@ -319,13 +404,14 @@ class MoveIntentHandler(AbstractRequestHandler):
             else:
                 speech_text = data["WRONG_ANSWER"]
             
-            response_builder = handler_input.response_builder.speak(speech_text).ask("What is your move?")
+            response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
             
+            localized_solution = get_localized_move(solution, data)
             puzzle_info = {
                 "fen": engine.get_fen(),
                 "description": attr.get("puzzle_description", ""),
                 "feedback": data["CORRECT_ANSWER"] if attr.get("puzzle_solved") else data["WRONG_ANSWER"],
-                "subtitle": f"Solution: {solution}" if attr.get("puzzle_solved") else "Try to solve it!"
+                "subtitle": data["SOLUTION_LABEL"].format(move=localized_solution) if attr.get("puzzle_solved") else data["TRY_SOLVE"]
             }
             
             directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
@@ -338,7 +424,14 @@ class MoveIntentHandler(AbstractRequestHandler):
             speech_text = data["REFLECT_MOVE"].format(piece=piece, square=square) + " " + engine.get_game_result()
         else:
             ai_move = engine.get_ai_move()
-            ai_text = data["AI_MOVE_RESPONSE"].format(move=ai_move)
+            
+            # Record AI move in history
+            history = attr.get("move_history", [])
+            history.append(ai_move)
+            attr["move_history"] = history
+
+            localized_ai_move = get_localized_move(ai_move, data)
+            ai_text = data["AI_MOVE_RESPONSE"].format(move=localized_ai_move)
             speech_text = data["REFLECT_MOVE"].format(piece=piece, square=square) + " " + ai_text
             
             if engine.is_game_over():
@@ -347,14 +440,16 @@ class MoveIntentHandler(AbstractRequestHandler):
         # Save board back to session
         attr["board_fen"] = engine.get_fen()
         
-        response_builder = handler_input.response_builder.speak(speech_text).ask("Your move?")
+        response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
         
         # Add APL if supported
-        last_move_text = f"You: {piece} to {square}"
+        is_spanish = "Resuelve" in data.get("SOLVE_PUZZLE", "")
+        last_move_text = f"Tú: {piece} a {square}" if is_spanish else f"You: {piece} to {square}"
         if not engine.is_game_over():
-            last_move_text += f" | AI: {ai_move}"
+            localized_ai_move = get_localized_move(ai_move, data)
+            last_move_text += f" | IA: {localized_ai_move}" if is_spanish else f" | AI: {ai_move}"
             
-        directive = get_apl_directive(handler_input, engine, last_move_text)
+        directive = get_apl_directive(handler_input, engine, last_move_text, type="matches")
         if directive:
             response_builder.add_directive(directive)
             
@@ -494,7 +589,7 @@ class PuzzleIntentHandler(AbstractRequestHandler):
             "fen": puzzle["fen"],
             "description": puzzle_desc,
             "feedback": "",
-            "subtitle": "Solve the puzzle!"
+            "subtitle": data["SOLVE_PUZZLE"]
         }
         
         directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")

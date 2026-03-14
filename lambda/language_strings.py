@@ -38,7 +38,20 @@ data = {
             "MENU_PUZZLES_SUB": "Solve challenges",
             "MENU_SQUARES": "Squares",
             "MENU_SQUARES_SUB": "Visualize board",
-            "TIME_TAKEN_LABEL": "Time: {time}s {arrow}"
+            "TIME_TAKEN_LABEL": "Time: {time}s {arrow}",
+            "SOLVE_PUZZLE": "Solve the puzzle!",
+            "SOLUTION_LABEL": "Solution: {move}",
+            "TRY_SOLVE": "Try to solve it!",
+            "MOVE_HISTORY_LABEL": "Move History",
+            "PIECE_NAMES": {
+                "N": "Knight",
+                "B": "Bishop",
+                "R": "Rook",
+                "Q": "Queen",
+                "K": "King",
+                "": "Pawn"
+            },
+            "YOUR_MOVE": "Your move?"
         }
     },
     "es": {
@@ -80,7 +93,20 @@ data = {
             "MENU_PUZZLES_SUB": "Resuelve retos",
             "MENU_SQUARES": "Casillas",
             "MENU_SQUARES_SUB": "Entrena tu visualización",
-            "TIME_TAKEN_LABEL": "Tiempo: {time}s {arrow}"
+            "TIME_TAKEN_LABEL": "Tiempo: {time}s {arrow}",
+            "SOLVE_PUZZLE": "¡Resuelve el puzzle!",
+            "SOLUTION_LABEL": "Solución: {move}",
+            "TRY_SOLVE": "¡Intenta resolverlo!",
+            "MOVE_HISTORY_LABEL": "Historial de movimientos",
+            "PIECE_NAMES": {
+                "N": "Caballo",
+                "B": "Alfil",
+                "R": "Torre",
+                "Q": "Dama",
+                "K": "Rey",
+                "": "Peón"
+            },
+            "YOUR_MOVE": "¿Tu turno?"
         }
     }
 }
