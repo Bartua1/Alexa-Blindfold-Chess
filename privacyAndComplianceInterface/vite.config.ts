@@ -15,6 +15,18 @@ export default defineConfig({
       host: 'bartualfdez.asuscomm.com',
       protocol: 'wss',
       clientPort: 443,
+    },
+    proxy: {
+      '/blindfoldchess/chessboard': {
+        target: 'http://localhost:4997',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/blindfoldchess/, '')
+      },
+      '/blindfoldchess/alexa': {
+        target: 'http://localhost:4997',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/blindfoldchess/, '')
+      }
     }
   }
 })
