@@ -33,8 +33,11 @@ data = {
             },
             "MENU_TITLE": "Blindfold Chess - Main Menu",
             "MENU_MATCHES": "Play a Match",
+            "MENU_MATCHES_SUB": "Play against AI",
             "MENU_PUZZLES": "Puzzles",
-            "MENU_SQUARES": "Squares"
+            "MENU_PUZZLES_SUB": "Solve challenges",
+            "MENU_SQUARES": "Squares",
+            "MENU_SQUARES_SUB": "Visualize board"
         }
     },
     "es": {
@@ -71,8 +74,11 @@ data = {
             },
             "MENU_TITLE": "Ajedrez a Ciegas - Menú Principal",
             "MENU_MATCHES": "Partida",
+            "MENU_MATCHES_SUB": "Juega contra la IA",
             "MENU_PUZZLES": "Puzzles",
-            "MENU_SQUARES": "Casillas"
+            "MENU_PUZZLES_SUB": "Resuelve retos",
+            "MENU_SQUARES": "Casillas",
+            "MENU_SQUARES_SUB": "Visualiza el tablero"
         }
     }
 }

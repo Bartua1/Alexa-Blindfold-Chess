@@ -49,19 +49,19 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                             "listItems": [
                                 {
                                     "primaryText": data["MENU_MATCHES"],
-                                    "secondaryText": "Play against AI",
+                                    "secondaryText": data["MENU_MATCHES_SUB"],
                                     "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
                                     "value": "matches"
                                 },
                                 {
                                     "primaryText": data["MENU_PUZZLES"],
-                                    "secondaryText": "Solve challenges",
+                                    "secondaryText": data["MENU_PUZZLES_SUB"],
                                     "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
                                     "value": "puzzles"
                                 },
                                 {
                                     "primaryText": data["MENU_SQUARES"],
-                                    "secondaryText": "Visualize board",
+                                    "secondaryText": data["MENU_SQUARES_SUB"],
                                     "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
                                     "value": "squares"
                                 }
