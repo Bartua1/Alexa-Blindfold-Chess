@@ -86,8 +86,8 @@
         {
           "name": "SQUARE_COLOR",
           "values": [
-            { "name": { "value": "white", "synonyms": ["blanco", "claro"] } },
-            { "name": { "value": "black", "synonyms": ["negro", "oscuro"] } }
+            { "name": { "value": "white", "synonyms": ["blanco", "claro", "blanca"] } },
+            { "name": { "value": "black", "synonyms": ["negro", "oscuro", "negra"] } }
           ]
         },
         {

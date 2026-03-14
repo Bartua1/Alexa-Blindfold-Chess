@@ -135,6 +135,8 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         if mode != "squares":
             attr.pop("current_square", None)
 
+        attr["mode"] = mode
+
         if mode == "squares":
             square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
             attr["current_square"] = square
@@ -147,8 +149,9 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
             
         # Default back to matches
         engine = BoardManager(attr.get("board_fen"))
+        speech_text = f"Switched to {mode}"
         response_builder = handler_input.response_builder.speak(speech_text).ask("Your move?")
-        directive = get_apl_directive(handler_input, engine, f"Switched to {mode}")
+        directive = get_apl_directive(handler_input, engine, speech_text)
         if directive:
             response_builder.add_directive(directive)
         return response_builder.response
