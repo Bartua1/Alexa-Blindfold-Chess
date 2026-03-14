@@ -29,11 +29,9 @@ def get_board_image_url(fen=None, highlight=None):
     if highlight:
         return f"{base_url}?highlight={highlight}"
     
-    # Fallback to fen-to-image for standard matches if no local fen renderer is implemented yet
-    # But for squares mode, we only need the local highlighted board
+    # Use local Vite renderer for FEN if requested
     if fen:
-        encoded_fen = fen.replace(" ", "%20")
-        return f"https://fen-to-image.com/image/{encoded_fen}"
+        return f"https://bartualfdez.asuscomm.com/blindfoldchess/render-puzzle?fen={fen.replace(' ', '%20')}"
     
     return base_url
 
@@ -98,6 +96,27 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                             "currentQuestion": squares_data.get("currentQuestion", ""),
                             "timeText": squares_data.get("timeText", ""),
                             "ratingNumber": squares_data.get("ratingNumber", 0)
+                        }
+                    }
+                )
+            
+            if type == "puzzles":
+                path = os.path.join(APL_PATH, "puzzles.json")
+                with open(path) as f:
+                    apl_doc = json.load(f)
+                
+                puzzle_data = engine if isinstance(engine, dict) else {}
+                
+                return RenderDocumentDirective(
+                    document=apl_doc,
+                    datasources={
+                        "puzzleData": {
+                            "title": data["MENU_PUZZLES"],
+                            "subtitle": puzzle_data.get("subtitle", ""),
+                            "feedback": puzzle_data.get("feedback", ""),
+                            "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
+                            "boardUrl": puzzle_data.get("boardUrl", get_board_image_url(puzzle_data.get("fen"))),
+                            "description": puzzle_data.get("description", "")
                         }
                     }
                 )
@@ -298,7 +317,15 @@ class MoveIntentHandler(AbstractRequestHandler):
                 speech_text = data["WRONG_ANSWER"]
             
             response_builder = handler_input.response_builder.speak(speech_text).ask("What is your move?")
-            directive = get_apl_directive(handler_input, engine, f"Puzzle Solution: {solution}")
+            
+            puzzle_info = {
+                "fen": engine.get_fen(),
+                "description": attr.get("puzzle_description", ""),
+                "feedback": data["CORRECT_ANSWER"] if attr.get("puzzle_solved") else data["WRONG_ANSWER"],
+                "subtitle": f"Solution: {solution}" if attr.get("puzzle_solved") else "Try to solve it!"
+            }
+            
+            directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
             if directive:
                 response_builder.add_directive(directive)
             return response_builder.response
@@ -449,6 +476,7 @@ class PuzzleIntentHandler(AbstractRequestHandler):
         attr["puzzle_solution"] = puzzle["solution"]
         attr["puzzle_id"] = puzzle["id"]
         attr["puzzle_solved"] = False
+        attr["puzzle_description"] = puzzle_desc
         
         engine = BoardManager(puzzle["fen"])
         
@@ -459,7 +487,14 @@ class PuzzleIntentHandler(AbstractRequestHandler):
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
-        directive = get_apl_directive(handler_input, engine, puzzle_desc)
+        puzzle_info = {
+            "fen": puzzle["fen"],
+            "description": puzzle_desc,
+            "feedback": "",
+            "subtitle": "Solve the puzzle!"
+        }
+        
+        directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
         if directive:
             response_builder.add_directive(directive)
             

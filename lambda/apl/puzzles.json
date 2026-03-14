@@ -1,0 +1,38 @@
+{
+    "type": "APL",
+    "version": "2024.3",
+    "license": "Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.\nSPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0\nLicensed under the Amazon Software License  http://aws.amazon.com/asl/",
+    "import": [
+        {
+            "name": "alexa-layouts",
+            "version": "1.7.0"
+        }
+    ],
+    "mainTemplate": {
+        "parameters": [
+            "puzzleData"
+        ],
+        "items": [
+            {
+                "type": "AlexaDetail",
+                "id": "puzzleDetail",
+                "detailType": "location",
+                "detailImageAlignment": "left",
+                "headerTitle": "${puzzleData.title}",
+                "headerSubtitle": "${puzzleData.feedback}",
+                "headerBackButton": true,
+                "headerAttributionImage": "${puzzleData.logoUrl}",
+                "imageBlurredBackground": false,
+                "imageScale": "best-fit",
+                "imageAspectRatio": "square",
+                "imageAlignment": "right",
+                "imageSource": "${puzzleData.boardUrl}",
+                "imageCaption": "",
+                "primaryText": "${puzzleData.description}",
+                "secondaryText": "${puzzleData.subtitle}",
+                "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
+                "theme": "light"
+            }
+        ]
+    }
+}

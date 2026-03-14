@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './index.css';
+import PuzzleRenderer from './PuzzleRenderer';
 
 const PrivacyPolicy = () => (
   <div className="content-card">
@@ -57,7 +58,8 @@ function App() {
           <div className="logo">Blindfold<span>Chess</span></div>
           <nav style={{ marginTop: '1rem' }}>
             <Link to="/privacy-policy" style={{ color: 'var(--accent-color)', marginRight: '1rem', textDecoration: 'none' }}>Privacy Policy</Link>
-            <Link to="/terms-of-use" style={{ color: 'var(--accent-color)', textDecoration: 'none' }}>Terms of Use</Link>
+            <Link to="/terms-of-use" style={{ color: 'var(--accent-color)', marginRight: '1rem', textDecoration: 'none' }}>Terms of Use</Link>
+            <Link to="/render-puzzle" style={{ color: 'var(--accent-color)', textDecoration: 'none' }}>Puzzle Renderer</Link>
           </nav>
         </header>
 
@@ -65,6 +67,7 @@ function App() {
           <Routes>
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-use" element={<TermsOfUse />} />
+            <Route path="/render-puzzle" element={<PuzzleRenderer />} />
             <Route path="/" element={<PrivacyPolicy />} />
           </Routes>
         </main>
