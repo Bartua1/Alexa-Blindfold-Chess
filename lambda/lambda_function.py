@@ -431,6 +431,28 @@ class NoIntentHandler(AbstractRequestHandler):
         
         return handler_input.response_builder.speak(speech_text).response
 
+class UserEventHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_request_type("Alexa.Presentation.APL.UserEvent")(handler_input)
+
+    def handle(self, handler_input):
+        request = handler_input.request_envelope.request
+        arguments = request.arguments
+        
+        if arguments and arguments[0] == "SwitchModeIntent":
+            mode_data = arguments[1]
+            mode = mode_data.get("mode")
+            
+            # Update session attributes manually
+            attr = handler_input.attributes_manager.session_attributes
+            attr["mode"] = mode
+            
+            # Re-use SwitchModeIntentHandler logic or just dispatch
+            # For simplicity, we'll just handle it here for now
+            return SwitchModeIntentHandler().handle(handler_input)
+            
+        return handler_input.response_builder.response
+
 class SessionEndedRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return is_request_type("SessionEndedRequest")(handler_input)
@@ -468,6 +490,7 @@ class LocalizationInterceptor(AbstractRequestInterceptor):
 sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(UserEventHandler())
 sb.add_request_handler(SwitchModeIntentHandler())
 sb.add_request_handler(SquareColorIntentHandler())
 sb.add_request_handler(PuzzleIntentHandler())

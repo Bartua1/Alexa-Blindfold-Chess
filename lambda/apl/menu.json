@@ -14,21 +14,21 @@
     "items": [
       {
         "type": "Container",
-        "width": "100%",
-        "height": "100%",
-        "backgroundColor": "#F5F5F7",
+        "width": "100vw",
+        "height": "100vh",
+        "backgroundColor": "#F0F0F2",
         "items": [
           {
             "type": "Frame",
             "position": "absolute",
             "width": "100%",
             "height": "100%",
-            "backgroundColor": "#F5F5F7",
             "background": {
               "type": "linear-gradient",
               "colorRange": [
                 "#FFFFFF",
-                "#E0E0E0"
+                "#E8E8EB",
+                "#D1D1D4"
               ],
               "angle": 135
             }
@@ -37,29 +37,37 @@
             "type": "Container",
             "width": "100%",
             "height": "100%",
-            "paddingTop": "5vh",
-            "paddingBottom": "5vh",
             "alignItems": "center",
             "justifyContent": "center",
+            "padding": "40dp",
             "items": [
               {
                 "type": "Text",
-                "text": "${payload.menuData.title}",
-                "fontSize": "48dp",
-                "fontWeight": "800",
-                "color": "#1D1D1F",
-                "letterSpacing": "2dp",
-                "textAlign": "center",
-                "paddingBottom": "6vh"
+                "text": "BLINDFOLD CHESS",
+                "fontSize": "42dp",
+                "fontWeight": "900",
+                "color": "#1A1A1C",
+                "letterSpacing": "6dp",
+                "paddingBottom": "10dp"
+              },
+              {
+                "type": "Text",
+                "text": "Choose your training mode",
+                "fontSize": "18dp",
+                "fontWeight": "400",
+                "color": "#6E6E73",
+                "paddingBottom": "50dp"
               },
               {
                 "type": "Container",
                 "flexDirection": "row",
-                "width": "90%",
-                "justifyContent": "spaceAround",
+                "width": "100%",
+                "justifyContent": "center",
                 "items": [
                   {
                     "type": "TouchWrapper",
+                    "width": "20vw",
+                    "height": "35vh",
                     "onPress": [
                       {
                         "type": "SendEvent",
@@ -73,19 +81,15 @@
                     ],
                     "item": {
                       "type": "Frame",
-                      "width": "28vw",
-                      "height": "40vh",
-                      "borderRadius": "24dp",
-                      "backgroundColor": "#FFFFFF",
-                      "borderWidth": "2dp",
-                      "borderColor": "#E5E5E5",
-                      "shadowColor": "#000000",
-                      "shadowOffset": {
-                        "width": 0,
-                        "height": 4
-                      },
-                      "shadowRadius": "12dp",
-                      "shadowOpacity": 0.1,
+                      "width": "100%",
+                      "height": "100%",
+                      "borderRadius": "30dp",
+                      "backgroundColor": "#FFFFFFE6" ,
+                      "borderWidth": "1dp",
+                      "borderColor": "#00000010",
+                      "shadowColor": "#00000020",
+                      "shadowOffset": { "width": 0, "height": 10 },
+                      "shadowRadius": "20dp",
                       "items": [
                         {
                           "type": "Container",
@@ -98,25 +102,28 @@
                             {
                               "type": "Text",
                               "text": "♔",
-                              "fontSize": "80dp",
-                              "color": "#333333",
-                              "paddingBottom": "20dp"
+                              "fontSize": "70dp",
+                              "color": "#1D1D1F"
                             },
                             {
                               "type": "Text",
                               "text": "${payload.menuData.matchesText}",
-                              "fontSize": "24dp",
-                              "fontWeight": "600",
+                              "fontSize": "18dp",
+                              "fontWeight": "700",
                               "color": "#1D1D1F",
-                              "textAlign": "center"
+                              "textAlign": "center",
+                              "paddingTop": "15dp"
                             }
                           ]
                         }
                       ]
                     }
                   },
+                  { "type": "Container", "width": "3vw" },
                   {
                     "type": "TouchWrapper",
+                    "width": "20vw",
+                    "height": "35vh",
                     "onPress": [
                       {
                         "type": "SendEvent",
@@ -130,19 +137,15 @@
                     ],
                     "item": {
                       "type": "Frame",
-                      "width": "28vw",
-                      "height": "40vh",
-                      "borderRadius": "24dp",
-                      "backgroundColor": "#FFFFFF",
-                      "borderWidth": "2dp",
-                      "borderColor": "#E5E5E5",
-                      "shadowColor": "#000000",
-                      "shadowOffset": {
-                        "width": 0,
-                        "height": 4
-                      },
-                      "shadowRadius": "12dp",
-                      "shadowOpacity": 0.1,
+                      "width": "100%",
+                      "height": "100%",
+                      "borderRadius": "30dp",
+                      "backgroundColor": "#FFFFFFE6",
+                      "borderWidth": "1dp",
+                      "borderColor": "#00000010",
+                      "shadowColor": "#00000020",
+                      "shadowOffset": { "width": 0, "height": 10 },
+                      "shadowRadius": "20dp",
                       "items": [
                         {
                           "type": "Container",
@@ -155,25 +158,28 @@
                             {
                               "type": "Text",
                               "text": "🧩",
-                              "fontSize": "80dp",
-                              "color": "#333333",
-                              "paddingBottom": "20dp"
+                              "fontSize": "70dp",
+                              "color": "#1D1D1F"
                             },
                             {
                               "type": "Text",
                               "text": "${payload.menuData.puzzlesText}",
-                              "fontSize": "24dp",
-                              "fontWeight": "600",
+                              "fontSize": "18dp",
+                              "fontWeight": "700",
                               "color": "#1D1D1F",
-                              "textAlign": "center"
+                              "textAlign": "center",
+                              "paddingTop": "15dp"
                             }
                           ]
                         }
                       ]
                     }
                   },
+                  { "type": "Container", "width": "3vw" },
                   {
                     "type": "TouchWrapper",
+                    "width": "20vw",
+                    "height": "35vh",
                     "onPress": [
                       {
                         "type": "SendEvent",
@@ -187,19 +193,15 @@
                     ],
                     "item": {
                       "type": "Frame",
-                      "width": "28vw",
-                      "height": "40vh",
-                      "borderRadius": "24dp",
-                      "backgroundColor": "#FFFFFF",
-                      "borderWidth": "2dp",
-                      "borderColor": "#E5E5E5",
-                      "shadowColor": "#000000",
-                      "shadowOffset": {
-                        "width": 0,
-                        "height": 4
-                      },
-                      "shadowRadius": "12dp",
-                      "shadowOpacity": 0.1,
+                      "width": "100%",
+                      "height": "100%",
+                      "borderRadius": "30dp",
+                      "backgroundColor": "#FFFFFFE6",
+                      "borderWidth": "1dp",
+                      "borderColor": "#00000010",
+                      "shadowColor": "#00000020",
+                      "shadowOffset": { "width": 0, "height": 10 },
+                      "shadowRadius": "20dp",
                       "items": [
                         {
                           "type": "Container",
@@ -212,17 +214,17 @@
                             {
                               "type": "Text",
                               "text": "🏁",
-                              "fontSize": "80dp",
-                              "color": "#333333",
-                              "paddingBottom": "20dp"
+                              "fontSize": "70dp",
+                              "color": "#1D1D1F"
                             },
                             {
                               "type": "Text",
                               "text": "${payload.menuData.squaresText}",
-                              "fontSize": "24dp",
-                              "fontWeight": "600",
+                              "fontSize": "18dp",
+                              "fontWeight": "700",
                               "color": "#1D1D1F",
-                              "textAlign": "center"
+                              "textAlign": "center",
+                              "paddingTop": "15dp"
                             }
                           ]
                         }
