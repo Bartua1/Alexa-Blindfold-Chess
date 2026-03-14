@@ -44,31 +44,29 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 return RenderDocumentDirective(
                     document=apl_doc,
                     datasources={
-                        "payload": {
-                            "imageListData": {
-                                "title": data["MENU_TITLE"],
-                                "listItems": [
-                                    {
-                                        "primaryText": data["MENU_MATCHES"],
-                                        "secondaryText": "Play against AI",
-                                        "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
-                                        "value": "matches"
-                                    },
-                                    {
-                                        "primaryText": data["MENU_PUZZLES"],
-                                        "secondaryText": "Solve challenges",
-                                        "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
-                                        "value": "puzzles"
-                                    },
-                                    {
-                                        "primaryText": data["MENU_SQUARES"],
-                                        "secondaryText": "Visualize board",
-                                        "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
-                                        "value": "squares"
-                                    }
-                                ],
-                                "hintText": data["HELP_MSG"]
-                            }
+                        "imageListData": {
+                            "title": data["MENU_TITLE"],
+                            "listItems": [
+                                {
+                                    "primaryText": data["MENU_MATCHES"],
+                                    "secondaryText": "Play against AI",
+                                    "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
+                                    "value": "matches"
+                                },
+                                {
+                                    "primaryText": data["MENU_PUZZLES"],
+                                    "secondaryText": "Solve challenges",
+                                    "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
+                                    "value": "puzzles"
+                                },
+                                {
+                                    "primaryText": data["MENU_SQUARES"],
+                                    "secondaryText": "Visualize board",
+                                    "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
+                                    "value": "squares"
+                                }
+                            ],
+                            "hintText": data["HELP_MSG"]
                         }
                     }
                 )

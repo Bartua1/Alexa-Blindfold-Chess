@@ -10,13 +10,13 @@
   ],
   "mainTemplate": {
     "parameters": [
-      "payload"
+      "imageListData"
     ],
     "items": [
       {
         "type": "AlexaImageList",
         "id": "menuList",
-        "headerTitle": "${payload.imageListData.title}",
+        "headerTitle": "${imageListData.title}",
         "headerBackButton": false,
         "headerDivider": true,
         "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
@@ -25,7 +25,7 @@
         "imageAspectRatio": "square",
         "imageMetadataPrimacy": true,
         "imageScale": "best-fit",
-        "listItems": "${payload.imageListData.listItems}",
+        "listItems": "${imageListData.listItems}",
         "primaryAction": [
           {
             "type": "SendEvent",
