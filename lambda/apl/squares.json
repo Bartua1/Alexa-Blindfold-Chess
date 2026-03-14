@@ -37,16 +37,18 @@
             "width": "100%",
             "flexGrow": 1,
             "flexDirection": "row",
-            "paddingLeft": "64dp",
-            "paddingRight": "64dp",
-            "paddingTop": "20dp",
-            "alignItems": "flex-start",
+            "paddingLeft": "4vw",
+            "paddingRight": "4vw",
+            "paddingTop": "2vh",
+            "paddingBottom": "2vh",
+            "alignItems": "center",
             "justifyContent": "center",
             "items": [
               {
                 "type": "Frame",
-                "width": "65vh",
-                "height": "65vh",
+                "width": "45vw",
+                "maxWidth": "60vh",
+                "aspectRatio": 1,
                 "borderRadius": "24dp",
                 "backgroundColor": "white",
                 "shadowColor": "black",
@@ -59,14 +61,14 @@
                   "width": "100%",
                   "height": "100%",
                   "scale": "best-fit",
-                  "overlayColor": "${squaresData.boardUrl == '' ? 'red' : 'transparent'}"
+                  "opacity": "${squaresData.boardUrl == '' || squaresData.boardUrl == null ? 0 : 1}"
                 }
               },
               {
                 "type": "Container",
-                "width": "50%",
+                "width": "45vw",
                 "height": "100%",
-                "paddingLeft": "40dp",
+                "paddingLeft": "4vw",
                 "paddingTop": "20dp",
                 "alignItems": "center",
                 "justifyContent": "center",
@@ -82,7 +84,7 @@
                       "type": "Text",
                       "text": "${squaresData.feedback}",
                       "color": "${squaresData.isCorrect ? '#2E7D32' : '#C62828'}",
-                      "fontSize": "40dp",
+                      "fontSize": "4vw",
                       "fontWeight": "bold",
                       "textAlign": "center"
                     }
@@ -91,9 +93,9 @@
                     "type": "Text",
                     "text": "${squaresData.currentQuestion}",
                     "color": "#212121",
-                    "fontSize": "32dp",
+                    "fontSize": "3.5vw",
                     "fontWeight": "600",
-                    "paddingTop": "40dp",
+                    "paddingTop": "4vh",
                     "textAlign": "center",
                     "width": "100%"
                   }

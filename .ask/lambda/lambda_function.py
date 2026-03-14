@@ -208,6 +208,8 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         slot = handler_input.request_envelope.request.intent.slots.get("mode")
         mode = get_resolved_value(slot)
         
+        logger.info(f"SwitchModeIntent received. Slot value: {slot.value if slot else 'None'}, Resolved mode: {mode}")
+        
         if not mode or mode not in ["matches", "puzzles", "squares"]:
             # Better clarification instead of just switching
             speech_text = data.get("HELP_MSG", "You can play a Match, practice with Puzzles, or train your visualization with Squares. Which one?")
