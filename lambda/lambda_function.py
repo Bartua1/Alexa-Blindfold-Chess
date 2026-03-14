@@ -47,9 +47,23 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                         "payload": {
                             "menuData": {
                                 "title": data["MENU_TITLE"],
-                                "matchesText": data["MENU_MATCHES"],
-                                "puzzlesText": data["MENU_PUZZLES"],
-                                "squaresText": data["MENU_SQUARES"]
+                                "listItems": [
+                                    {
+                                        "primaryText": data["MENU_MATCHES"],
+                                        "imageSource": "https://cdn-icons-png.flaticon.com/512/3133/3133139.png",
+                                        "value": "matches"
+                                    },
+                                    {
+                                        "primaryText": data["MENU_PUZZLES"],
+                                        "imageSource": "https://cdn-icons-png.flaticon.com/512/1008/1008986.png",
+                                        "value": "puzzles"
+                                    },
+                                    {
+                                        "primaryText": data["MENU_SQUARES"],
+                                        "imageSource": "https://cdn-icons-png.flaticon.com/512/3067/3067160.png",
+                                        "value": "squares"
+                                    }
+                                ]
                             }
                         }
                     }
@@ -436,19 +450,23 @@ class UserEventHandler(AbstractRequestHandler):
         return is_request_type("Alexa.Presentation.APL.UserEvent")(handler_input)
 
     def handle(self, handler_input):
+        data = handler_input.attributes_manager.request_attributes["_"]
         request = handler_input.request_envelope.request
         arguments = request.arguments
         
         if arguments and arguments[0] == "SwitchModeIntent":
-            mode_data = arguments[1]
-            mode = mode_data.get("mode")
+            mode = arguments[1]
             
-            # Update session attributes manually
+            # Update session attributes
             attr = handler_input.attributes_manager.session_attributes
             attr["mode"] = mode
             
-            # Re-use SwitchModeIntentHandler logic or just dispatch
-            # For simplicity, we'll just handle it here for now
+            # Map mode to localized display name for feedback
+            mode_name_key = f"MENU_{mode.upper()}"
+            mode_name = data.get(mode_name_key, mode)
+            
+            # Immediately trigger the mode switch response
+            # This ensures the user hears confirmation of their tap
             return SwitchModeIntentHandler().handle(handler_input)
             
         return handler_input.response_builder.response
