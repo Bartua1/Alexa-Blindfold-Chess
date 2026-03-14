@@ -2,11 +2,11 @@
   "askcliStatesVersion": "2020-03-31",
   "profiles": {
     "default": {
-      "deploymentStatus": "IN_PROGRESS",
+      "deploymentStatus": "COMPLETE",
       "skillMetadata": {
         "lastImportId": "amzn1.ask-package.import.54bee71b-1f33-4b8d-aa33-327f9de462bd",
         "lastImportTimestamp": "2026-03-14T08:35:56.509Z",
-        "lastDeployHash": "P3SjAORHfV0eppAzUp0lY+He1+I=",
+        "lastDeployHash": "82X+Pi62C3SZwaH8YPSaFnqCydw=",
         "lastDeployType": "interaction-model"
       },
       "skillId": "amzn1.ask.skill.ead66c8d-e209-4b1a-8d3b-1dc7b4580d29"

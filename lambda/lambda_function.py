@@ -28,7 +28,11 @@ def get_board_image_url(fen):
 def get_apl_directive(handler_input, engine, last_move="Welcome!"):
     """Generates the APL RenderDocument directive if supported."""
     try:
-        supported = getattr(handler_input.request_envelope.context.system.device.supported_interfaces, 'alexa_presentation_apl', None)
+        context = handler_input.request_envelope.context
+        interfaces = context.system.device.supported_interfaces
+        logger.info(f"Supported Interfaces: {interfaces}")
+        
+        supported = getattr(interfaces, 'alexa_presentation_apl', None)
         if supported:
             # Use absolute path for robustness in Lambda
             path = os.path.join(APL_PATH, "chessboard.json")
