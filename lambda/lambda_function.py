@@ -6,8 +6,11 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExc
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
+from ask_sdk_model.interfaces.alexa.presentation.apl import RenderDocumentDirective
 import json
+import os
 import random
+import logging
 import language_strings
 from chess_engine.board_manager import BoardManager
 
@@ -43,15 +46,12 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
             with open(path) as f:
                 apl_doc = json.load(f)
             
-            # If engine is None (Squares mode), we might want a different view or hide the board
-            # For now, we'll keep the board but maybe with a default or empty FEN if needed
             fen = engine.get_fen() if engine else "8/8/8/8/8/8/8/8"
             status = engine.get_game_result() if engine else ""
                 
-            return {
-                "type": "Alexa.Presentation.APL.RenderDocument",
-                "document": apl_doc,
-                "datasources": {
+            return RenderDocumentDirective(
+                document=apl_doc,
+                datasources={
                     "payload": {
                         "boardData": {
                             "boardUrl": get_board_image_url(fen),
@@ -60,23 +60,27 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
                         }
                     }
                 }
-            }
+            )
     except Exception as e:
         logger.error(f"Error generating APL: {e}", exc_info=True)
     return None
 
 def get_puzzles():
-    # Try multiple possible locations for the file
-    locations = [
-        os.path.join(os.path.dirname(__file__), "puzzles.json"),
-        os.path.join(os.getcwd(), "lambda", "puzzles.json"),
-        os.path.join(os.getcwd(), "puzzles.json")
-    ]
-    for path in locations:
-        if os.path.exists(path):
-            with open(path) as f:
-                return json.load(f)
-    raise FileNotFoundError(f"puzzles.json not found in any of: {locations}")
+    # Try to find the file in the same directory as this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(script_dir, "puzzles.json")
+    
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+            
+    # Fallback to current working directory
+    path = os.path.join(os.getcwd(), "puzzles.json")
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+            
+    raise FileNotFoundError(f"puzzles.json not found in absolute path: {os.path.abspath(path)}")
 
 def get_square_color(square):
     # a1 is (0,0) and is BLACK. 
