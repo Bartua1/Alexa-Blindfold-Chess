@@ -135,7 +135,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 # Fetch move history from session attributes
                 attr = handler_input.attributes_manager.session_attributes
                 move_history_list = attr.get("move_history", [])
-                move_history_text = format_move_history(move_history_list)
+                move_history_data = get_move_history_datasource(move_history_list)
                 
                 return RenderDocumentDirective(
                     document=apl_doc,
@@ -146,7 +146,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                             "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
                             "boardUrl": get_board_image_url(fen),
                             "lastMove": last_move,
-                            "moveHistory": move_history_text,
+                            "moveHistory": move_history_data,
                             "status": status if status != "ONGOING" else ""
                         }
                     }
@@ -249,19 +249,22 @@ def get_square_color(square):
     rank = int(square[1]) - 1
     return "black" if (file + rank) % 2 == 0 else "white"
 
-def format_move_history(moves):
-    """Formats a list of moves into a string like '1. e4 e5 2. Nf3'."""
+def get_move_history_datasource(moves):
+    """Formats a list of moves into a structured list for APL Sequence."""
     if not moves:
-        return ""
+        return []
     
-    formatted = []
+    items = []
     for i in range(0, len(moves), 2):
         move_num = (i // 2) + 1
         white_move = moves[i]
         black_move = moves[i+1] if i + 1 < len(moves) else ""
-        formatted.append(f"{move_num}. {white_move} {black_move}".strip())
-    
-    return "  ".join(formatted)
+        items.append({
+            "number": f"{move_num}.",
+            "white": white_move,
+            "black": black_move
+        })
+    return items
 
 def get_resolved_value(slot):
     """Safely extracts the first resolved value from an Alexa slot."""
