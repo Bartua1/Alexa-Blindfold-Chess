@@ -33,9 +33,63 @@
             "{piece} a {square}",
             "mueve el {piece} a {square}"
           ]
+        },
+        {
+          "name": "SwitchModeIntent",
+          "slots": [
+            {
+              "name": "mode",
+              "type": "GAME_MODE"
+            }
+          ],
+          "samples": [
+            "cambia a modo {mode}",
+            "cambia el modo a {mode}",
+            "pon el modo {mode}",
+            "jugar {mode}",
+            "cambia de modo"
+          ]
+        },
+        {
+          "name": "SquareColorIntent",
+          "slots": [
+            {
+              "name": "color",
+              "type": "SQUARE_COLOR"
+            }
+          ],
+          "samples": [
+            "es {color}",
+            "el color es {color}",
+            "{color}"
+          ]
+        },
+        {
+          "name": "PuzzleIntent",
+          "samples": [
+            "dame un puzzle",
+            "nuevo puzzle",
+            "puzzle",
+            "siguiente puzzle"
+          ]
         }
       ],
       "types": [
+        {
+          "name": "GAME_MODE",
+          "values": [
+            { "name": { "value": "matches", "synonyms": ["partidas", "juego", "clásico", "partida"] } },
+            { "name": { "value": "puzzles", "synonyms": ["puzzle", "entrenamiento", "acertijo"] } },
+            { "name": { "value": "squares", "synonyms": ["casillas", "visualización", "cuadros", "casilla"] } }
+          ]
+        },
+        {
+          "name": "SQUARE_COLOR",
+          "values": [
+            { "name": { "value": "white", "synonyms": ["blanco", "claro"] } },
+            { "name": { "value": "black", "synonyms": ["negro", "oscuro"] } }
+          ]
+        },
         {
           "name": "CHESS_PIECE",
           "values": [

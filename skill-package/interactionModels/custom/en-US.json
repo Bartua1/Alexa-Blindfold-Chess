@@ -32,9 +32,63 @@
             "play {piece} {square}",
             "{piece} to {square}"
           ]
+        },
+        {
+          "name": "SwitchModeIntent",
+          "slots": [
+            {
+              "name": "mode",
+              "type": "GAME_MODE"
+            }
+          ],
+          "samples": [
+            "switch to {mode} mode",
+            "switch to {mode}",
+            "change mode to {mode}",
+            "play {mode}",
+            "switch mode"
+          ]
+        },
+        {
+          "name": "SquareColorIntent",
+          "slots": [
+            {
+              "name": "color",
+              "type": "SQUARE_COLOR"
+            }
+          ],
+          "samples": [
+            "it is {color}",
+            "the color is {color}",
+            "{color}"
+          ]
+        },
+        {
+          "name": "PuzzleIntent",
+          "samples": [
+            "give me a puzzle",
+            "new puzzle",
+            "puzzle",
+            "next puzzle"
+          ]
         }
       ],
       "types": [
+        {
+          "name": "GAME_MODE",
+          "values": [
+            { "name": { "value": "matches", "synonyms": ["match", "game", "classic"] } },
+            { "name": { "value": "puzzles", "synonyms": ["puzzle", "training"] } },
+            { "name": { "value": "squares", "synonyms": ["square", "visualization"] } }
+          ]
+        },
+        {
+          "name": "SQUARE_COLOR",
+          "values": [
+            { "name": { "value": "white", "synonyms": ["light"] } },
+            { "name": { "value": "black", "synonyms": ["dark"] } }
+          ]
+        },
         {
           "name": "CHESS_PIECE",
           "values": [
