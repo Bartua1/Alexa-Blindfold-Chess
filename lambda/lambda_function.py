@@ -12,6 +12,7 @@ import os
 import random
 import logging
 import language_strings
+import time
 from chess_engine.board_manager import BoardManager
 
 logger = logging.getLogger(__name__)
@@ -84,19 +85,31 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 with open(path) as f:
                     apl_doc = json.load(f)
                 
-                # 'engine' here is used to pass squaresData dict for squares mode
-                # last_move is used to pass current_question
                 squares_data = engine if isinstance(engine, dict) else {}
                 
                 return RenderDocumentDirective(
                     document=apl_doc,
                     datasources={
-                        "squaresData": {
-                            "title": data["MENU_SQUARES"],
-                            "boardUrl": squares_data.get("boardUrl", get_board_image_url()),
-                            "feedback": squares_data.get("feedback", ""),
-                            "isCorrect": squares_data.get("isCorrect", True),
-                            "currentQuestion": squares_data.get("currentQuestion", "")
+                        "payload": {
+                            "detailImageRightData": {
+                                "title": squares_data.get("title", data["MENU_SQUARES"]),
+                                "subtitle": squares_data.get("feedback", ""),
+                                "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
+                                "image": {
+                                    "sources": [{"url": squares_data.get("boardUrl", get_board_image_url())}],
+                                    "contentDescription": "Chessboard"
+                                },
+                                "textContent": {
+                                    "primaryText": {"text": squares_data.get("currentQuestion", "")},
+                                    "secondaryText": {"text": squares_data.get("timeText", "")},
+                                    "rating": {"number": 0, "text": ""},
+                                    "locationText": {"text": ""}
+                                },
+                                "buttons": [{"text": "Next"}, {"text": "Stop"}],
+                                "backgroundImage": {
+                                    "sources": [{"url": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png"}]
+                                }
+                            }
                         }
                     }
                 )
@@ -223,6 +236,7 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         if mode == "squares":
             square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
             attr["current_square"] = square
+            attr["start_time"] = time.time()
             speech_text = data["SQUARES_MODE_START"].format(square=square)
             
             response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
@@ -230,7 +244,8 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
                 "boardUrl": get_board_image_url(highlight=square), 
                 "feedback": "",
                 "isCorrect": True,
-                "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square
+                "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
+                "timeText": ""
             }
             directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
             if directive:
@@ -345,6 +360,21 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         # Always get a new square
         new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
         attr["current_square"] = new_square
+
+        # Calculate time taken
+        elapsed_time = round(time.time() - attr.get("start_time", time.time()), 1)
+        last_time = attr.get("last_time")
+        arrow = ""
+        if last_time is not None:
+            if elapsed_time < last_time:
+                arrow = "↓"
+            elif elapsed_time > last_time:
+                arrow = "↑"
+        
+        attr["last_time"] = elapsed_time
+        attr["start_time"] = time.time() # Reset for next
+        
+        time_text = data["TIME_TAKEN_LABEL"].format(time=elapsed_time, arrow=arrow)
         
         if is_correct:
             speech_text = data["NEXT_SQUARE"].format(square=new_square)
@@ -360,7 +390,8 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             "boardUrl": get_board_image_url(highlight=new_square),
             "feedback": feedback_text,
             "isCorrect": is_correct,
-            "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square
+            "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
+            "timeText": time_text
         }
         
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")

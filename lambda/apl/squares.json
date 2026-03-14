@@ -1,120 +1,46 @@
 {
-  "type": "APL",
-  "version": "2024.3",
-  "theme": "light",
-  "import": [
-    {
-      "name": "alexa-layouts",
-      "version": "1.7.0"
-    }
-  ],
-  "mainTemplate": {
-    "parameters": [
-      "squaresData"
+    "type": "APL",
+    "version": "2024.3",
+    "license": "Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.\nSPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0\nLicensed under the Amazon Software License  http://aws.amazon.com/asl/",
+    "import": [
+        {
+            "name": "alexa-layouts",
+            "version": "1.7.0"
+        }
     ],
-    "items": [
-      {
-        "type": "Container",
-        "width": "100%",
-        "height": "100%",
+    "mainTemplate": {
+        "parameters": [
+            "payload"
+        ],
         "items": [
-          {
-            "type": "AlexaBackground",
-            "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
-            "backgroundOverlay": true,
-            "backgroundBlur": false
-          },
-          {
-            "type": "AlexaHeader",
-            "headerTitle": "${squaresData.title}",
-            "headerDivider": true,
-            "theme": "light"
-          },
-          {
-            "type": "Container",
-            "width": "100%",
-            "flexGrow": 1,
-            "flexDirection": "row",
-            "paddingLeft": "4vw",
-            "paddingRight": "4vw",
-            "alignItems": "center",
-            "justifyContent": "center",
-            "items": [
-              {
-                "type": "Container",
-                "width": "50%",
-                "height": "100%",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "items": [
-                  {
-                    "type": "Frame",
-                    "width": "60vh",
-                    "height": "60vh",
-                    "maxWidth": "44vw",
-                    "maxHeight": "44vw",
-                    "borderRadius": "24dp",
-                    "backgroundColor": "white",
-                    "shadowColor": "black",
-                    "shadowOffset": { "width": 0, "height": 4 },
-                    "shadowRadius": "12dp",
-                    "padding": "12dp",
-                    "item": {
-                      "type": "Image",
-                      "source": "${squaresData.boardUrl}",
-                      "width": "100%",
-                      "height": "100%",
-                      "scale": "best-fit",
-                      "opacity": "${squaresData.boardUrl == '' || squaresData.boardUrl == null ? 0 : 1}"
-                    }
-                  }
-                ]
-              },
-              {
-                "type": "Container",
-                "width": "45%",
-                "height": "100%",
-                "paddingLeft": "4vw",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "items": [
-                  {
-                    "type": "Frame",
-                    "width": "100%",
-                    "borderRadius": "16dp",
-                    "backgroundColor": "${squaresData.isCorrect ? '#E8F5E9' : '#FFEBEE'}",
-                    "padding": "20dp",
-                    "display": "${squaresData.feedback ? 'flex' : 'none'}",
-                    "item": {
-                      "type": "Text",
-                      "text": "${squaresData.feedback}",
-                      "color": "${squaresData.isCorrect ? '#2E7D32' : '#C62828'}",
-                      "fontSize": "4vw",
-                      "fontWeight": "bold",
-                      "textAlign": "center"
-                    }
-                  },
-                  {
-                    "type": "Text",
-                    "text": "${squaresData.currentQuestion}",
-                    "color": "#212121",
-                    "fontSize": "3.5vw",
-                    "fontWeight": "600",
-                    "paddingTop": "4vh",
-                    "textAlign": "center",
-                    "width": "100%"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "AlexaFooter",
-            "footerHint": "${squaresData.isCorrect ? 'Correct! Say next to continue' : 'Try the next one!'}",
-            "theme": "light"
-          }
+            {
+                "type": "AlexaDetail",
+                "id": "squaresDetail",
+                "detailType": "location",
+                "detailImageAlignment": "left",
+                "headerTitle": "${payload.detailImageRightData.title}",
+                "headerSubtitle": "${payload.detailImageRightData.subtitle}",
+                "headerBackButton": true,
+                "headerAttributionImage": "${payload.detailImageRightData.logoUrl}",
+                "imageBlurredBackground": false,
+                "imageScale": "best-fill",
+                "imageAspectRatio": "square",
+                "imageAlignment": "right",
+                "imageSource": "${payload.detailImageRightData.image.sources[0].url}",
+                "imageCaption": "${payload.detailImageRightData.image.contentDescription}",
+                "primaryText": "${payload.detailImageRightData.textContent.primaryText.text}",
+                "ratingSlotMode": "multiple",
+                "ratingNumber": "${payload.detailImageRightData.textContent.rating.number}",
+                "ratingText": "${payload.detailImageRightData.textContent.rating.text}",
+                "locationText": "${payload.detailImageRightData.textContent.locationText.text}",
+                "secondaryText": "${payload.detailImageRightData.textContent.secondaryText.text}",
+                "button1Text": "${payload.detailImageRightData.buttons[0].text}",
+                "button2Text": "${payload.detailImageRightData.buttons[1].text}",
+                "button1Theme": "dark",
+                "button2Theme": "dark",
+                "backgroundImageSource": "${payload.detailImageRightData.backgroundImage.sources[0].url}",
+                "theme": "dark"
+            }
         ]
-      }
-    ]
-  }
+    }
 }

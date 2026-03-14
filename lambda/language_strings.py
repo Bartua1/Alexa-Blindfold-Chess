@@ -37,7 +37,8 @@ data = {
             "MENU_PUZZLES": "Puzzles",
             "MENU_PUZZLES_SUB": "Solve challenges",
             "MENU_SQUARES": "Squares",
-            "MENU_SQUARES_SUB": "Visualize board"
+            "MENU_SQUARES_SUB": "Visualize board",
+            "TIME_TAKEN_LABEL": "Time: {time}s {arrow}"
         }
     },
     "es": {
@@ -78,7 +79,8 @@ data = {
             "MENU_PUZZLES": "Puzzles",
             "MENU_PUZZLES_SUB": "Resuelve retos",
             "MENU_SQUARES": "Casillas",
-            "MENU_SQUARES_SUB": "Entrena tu visualización"
+            "MENU_SQUARES_SUB": "Entrena tu visualización",
+            "TIME_TAKEN_LABEL": "Tiempo: {time}s {arrow}"
         }
     }
 }
