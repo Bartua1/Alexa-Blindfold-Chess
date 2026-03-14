@@ -77,24 +77,33 @@ def get_chessboard():
                 font_paths = [
                     "/Users/bartua1/Library/Fonts/JetBrainsMonoNerdFont-Regular.ttf",
                     "/System/Library/Fonts/Supplemental/Arial.ttf",
+                    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
                     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" 
                 ]
                 font = None
                 for path in font_paths:
                     if os.path.exists(path):
-                        font = ImageFont.truetype(path, int(square_size * 0.7))
-                        break
+                        try:
+                            font = ImageFont.truetype(path, int(square_size * 0.7))
+                            logger.info(f"Using font: {path}")
+                            break
+                        except Exception as e:
+                            logger.error(f"Failed to load font {path}: {e}")
                 
                 if not font:
-                    font = ImageFont.load_default()
+                    logger.info("Falling back to default scalable font")
+                    font = ImageFont.load_default(size=int(square_size * 0.7))
 
                 board = chess.Board(fen)
+                piece_count = 0
                 for square in chess.SQUARES:
                     piece = board.piece_at(square)
                     if piece:
-                        col = chess.square_column(square)
-                        row = 7 - chess.square_row(square)
+                        piece_count += 1
+                        col = chess.square_file(square)
+                        row = 7 - chess.square_rank(square)
                         
+                        # Center of the square
                         x = col * square_size + square_size // 2
                         y = row * square_size + square_size // 2
                         
@@ -109,6 +118,8 @@ def get_chessboard():
                         
                         draw.text((x, y), symbol, fill=fill_color, font=font, anchor="mm", 
                                   stroke_width=2, stroke_fill=stroke_color)
+                
+                logger.info(f"Rendered {piece_count} pieces on the board.")
             except Exception as e:
                 logger.error(f"Error drawing pieces: {e}")
 
