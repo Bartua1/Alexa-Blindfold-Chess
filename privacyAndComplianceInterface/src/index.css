@@ -102,8 +102,8 @@ p, li {
 }
 
 .board-wrapper {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 600px;
+  height: 600px;
 }
 
 .renderer-controls {
