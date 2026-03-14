@@ -32,8 +32,12 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
         interfaces = context.system.device.supported_interfaces
         logger.info(f"Supported Interfaces: {interfaces}")
         
-        supported = getattr(interfaces, 'alexa_presentation_apl', None)
-        if supported:
+        # Check if APL is supported or if there is a Viewport (indicating a screen)
+        has_apl = getattr(interfaces, 'alexa_presentation_apl', None) is not None
+        has_viewport = getattr(context, 'viewport', None) is not None
+        
+        if has_apl or has_viewport:
+            # Use absolute path for robustness in Lambda
             # Use absolute path for robustness in Lambda
             path = os.path.join(APL_PATH, "chessboard.json")
             with open(path) as f:
@@ -62,9 +66,17 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
     return None
 
 def get_puzzles():
-    path = os.path.join(os.path.dirname(__file__), "puzzles.json")
-    with open(path) as f:
-        return json.load(f)
+    # Try multiple possible locations for the file
+    locations = [
+        os.path.join(os.path.dirname(__file__), "puzzles.json"),
+        os.path.join(os.getcwd(), "lambda", "puzzles.json"),
+        os.path.join(os.getcwd(), "puzzles.json")
+    ]
+    for path in locations:
+        if os.path.exists(path):
+            with open(path) as f:
+                return json.load(f)
+    raise FileNotFoundError(f"puzzles.json not found in any of: {locations}")
 
 def get_square_color(square):
     # a1 is (0,0) and is BLACK. 

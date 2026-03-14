@@ -79,7 +79,7 @@
           "values": [
             { "name": { "value": "matches", "synonyms": ["match", "game", "classic"] } },
             { "name": { "value": "puzzles", "synonyms": ["puzzle", "training"] } },
-            { "name": { "value": "squares", "synonyms": ["square", "visualization"] } }
+            { "name": { "value": "squares", "synonyms": ["square", "visualization", "scores", "score"] } }
           ]
         },
         {
