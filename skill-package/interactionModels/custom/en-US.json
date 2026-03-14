@@ -42,11 +42,16 @@
             }
           ],
           "samples": [
-            "switch to {mode} mode",
-            "switch to {mode}",
+            "switch to mode {mode}",
             "change mode to {mode}",
+            "set mode to {mode}",
             "play {mode}",
-            "switch mode"
+            "switch mode",
+            "{mode}",
+            "mode {mode}",
+            "squares",
+            "puzzles",
+            "matches"
           ]
         },
         {

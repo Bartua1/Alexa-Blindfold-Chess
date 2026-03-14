@@ -46,7 +46,7 @@ class BoardManager:
     def parse_alexa_slots(piece, square):
         """
         Converts Alexa slots to SAN.
-        Simple implementation: assumes piece is lowercase and square is like 'e4'.
+        Handles None values and defaults piece to empty string (pawn).
         """
         piece_map = {
             "pawn": "",
@@ -64,5 +64,22 @@ class BoardManager:
             "rey": "K"
         }
         
-        prefix = piece_map.get(piece.lower(), "")
-        return f"{prefix}{square.lower()}"
+        # Handle missing slots
+        piece_val = piece.lower() if piece else "pawn"
+        square_val = square.lower() if square else ""
+        
+        prefix = piece_map.get(piece_val, "")
+        return f"{prefix}{square_val}"
+
+    def get_piece_positions(self):
+        """Returns a dictionary of pieces and their squares, grouped by color."""
+        positions = {"white": [], "black": []}
+        for square in chess.SQUARES:
+            piece = self.board.piece_at(square)
+            if piece:
+                color = "white" if piece.color == chess.WHITE else "black"
+                positions[color].append({
+                    "piece": piece.symbol().upper(),
+                    "square": chess.square_name(square)
+                })
+        return positions
