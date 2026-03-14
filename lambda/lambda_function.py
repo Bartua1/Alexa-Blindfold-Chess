@@ -348,27 +348,22 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
         attr["current_square"] = new_square
 
-        # Calculate time taken
-        elapsed_time = round(time.time() - attr.get("start_time", time.time()), 1)
-        last_time = attr.get("last_time")
-        arrow = ""
-        if last_time is not None:
-            if elapsed_time < last_time:
-                arrow = "↓"
-            elif elapsed_time > last_time:
-                arrow = "↑"
+        color_green = "#2E7D32"
+        color_red = "#C62828"
         
         attr["last_time"] = elapsed_time
         attr["start_time"] = time.time() # Reset for next
         
-        time_text = data["TIME_TAKEN_LABEL"].format(time=elapsed_time, arrow=arrow)
+        # Determine color for time based on trend
+        time_color = color_green if last_time is None or elapsed_time <= last_time else color_red
+        time_text = f"<font color='{time_color}'>{data['TIME_TAKEN_LABEL'].format(time=elapsed_time, arrow=arrow)}</font>"
         
         if is_correct:
             speech_text = data["NEXT_SQUARE"].format(square=new_square)
-            feedback_text = data["CORRECT_ANSWER"]
+            feedback_text = f"<font color='{color_green}'>{data['CORRECT_ANSWER']}</font>"
         else:
             speech_text = f"{data['WRONG_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
-            feedback_text = data["WRONG_ANSWER"]
+            feedback_text = f"<font color='{color_red}'>{data['WRONG_ANSWER']}</font>"
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
