@@ -32,14 +32,11 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
     """Generates the APL RenderDocument directive if supported."""
     try:
         context = handler_input.request_envelope.context
-        interfaces = context.system.device.supported_interfaces
+        # Use get_supported_interfaces utility for cleaner APL check
+        interfaces = handler_input.request_envelope.context.system.device.supported_interfaces
         logger.info(f"Supported Interfaces: {interfaces}")
         
-        # Check if APL is supported or if there is a Viewport (indicating a screen)
-        has_apl = getattr(interfaces, 'alexa_presentation_apl', None) is not None
-        has_viewport = getattr(context, 'viewport', None) is not None
-        
-        if has_apl or has_viewport:
+        if interfaces.alexa_presentation_apl is not None:
             # Use absolute path for robustness in Lambda
             # Use absolute path for robustness in Lambda
             path = os.path.join(APL_PATH, "chessboard.json")
@@ -65,8 +62,7 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
         logger.error(f"Error generating APL: {e}", exc_info=True)
     return None
 
-def get_puzzles():
-    # Try to find the file in the same directory as this script
+    # Use path relative to this script for robust loading in any environment
     script_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(script_dir, "puzzles.json")
     
@@ -74,13 +70,7 @@ def get_puzzles():
         with open(path) as f:
             return json.load(f)
             
-    # Fallback to current working directory
-    path = os.path.join(os.getcwd(), "puzzles.json")
-    if os.path.exists(path):
-        with open(path) as f:
-            return json.load(f)
-            
-    raise FileNotFoundError(f"puzzles.json not found in absolute path: {os.path.abspath(path)}")
+    raise FileNotFoundError(f"puzzles.json not found at: {path}")
 
 def get_square_color(square):
     # a1 is (0,0) and is BLACK. 

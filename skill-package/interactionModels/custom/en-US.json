@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "blindfold chess",
+      "invocationName": "personal blindfold chess",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
