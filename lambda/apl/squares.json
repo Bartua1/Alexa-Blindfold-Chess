@@ -36,40 +36,75 @@
             "type": "Container",
             "width": "100%",
             "flexGrow": 1,
-            "alignItems": "center",
+            "flexDirection": "row",
+            "paddingLeft": "64dp",
+            "paddingRight": "64dp",
+            "paddingTop": "20dp",
+            "alignItems": "flex-start",
             "justifyContent": "center",
             "items": [
               {
                 "type": "Frame",
-                "width": "80vh",
-                "height": "80vh",
-                "borderRadius": "16dp",
+                "width": "65vh",
+                "height": "65vh",
+                "borderRadius": "24dp",
                 "backgroundColor": "white",
-                "padding": "10dp",
+                "shadowColor": "black",
+                "shadowOffset": { "width": 0, "height": 4 },
+                "shadowRadius": "12dp",
+                "padding": "12dp",
                 "item": {
                   "type": "Image",
                   "source": "${squaresData.boardUrl}",
                   "width": "100%",
                   "height": "100%",
-                  "scale": "best-fit"
+                  "scale": "best-fit",
+                  "overlayColor": "${squaresData.boardUrl == '' ? 'red' : 'transparent'}"
                 }
               },
               {
-                "type": "Text",
-                "text": "${squaresData.feedback}",
-                "color": "${squaresData.isCorrect ? 'green' : 'red'}",
-                "fontSize": "36dp",
-                "fontWeight": "bold",
-                "paddingTop": "20dp"
-              },
-              {
-                "type": "Text",
-                "text": "${squaresData.currentQuestion}",
-                "color": "black",
-                "fontSize": "28dp",
-                "paddingTop": "10dp"
+                "type": "Container",
+                "width": "50%",
+                "height": "100%",
+                "paddingLeft": "40dp",
+                "paddingTop": "20dp",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "items": [
+                  {
+                    "type": "Frame",
+                    "width": "100%",
+                    "borderRadius": "16dp",
+                    "backgroundColor": "${squaresData.isCorrect ? '#E8F5E9' : '#FFEBEE'}",
+                    "padding": "20dp",
+                    "display": "${squaresData.feedback ? 'flex' : 'none'}",
+                    "item": {
+                      "type": "Text",
+                      "text": "${squaresData.feedback}",
+                      "color": "${squaresData.isCorrect ? '#2E7D32' : '#C62828'}",
+                      "fontSize": "40dp",
+                      "fontWeight": "bold",
+                      "textAlign": "center"
+                    }
+                  },
+                  {
+                    "type": "Text",
+                    "text": "${squaresData.currentQuestion}",
+                    "color": "#212121",
+                    "fontSize": "32dp",
+                    "fontWeight": "600",
+                    "paddingTop": "40dp",
+                    "textAlign": "center",
+                    "width": "100%"
+                  }
+                ]
               }
             ]
+          },
+          {
+            "type": "AlexaFooter",
+            "footerHint": "${squaresData.isCorrect ? 'Correct! Say next to continue' : 'Try the next one!'}",
+            "theme": "light"
           }
         ]
       }

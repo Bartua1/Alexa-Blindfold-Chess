@@ -90,6 +90,10 @@ def server_error(e):
     # Ensure even 500 errors return JSON, not HTML
     return jsonify({"error": "Internal Server Error"}), 500
 
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({"status": "ok", "message": "Chess server is running"}), 200
+
 if __name__ == '__main__':
     logger.info("Starting server on port 4997")
     app.run(host='0.0.0.0', port=4997)
