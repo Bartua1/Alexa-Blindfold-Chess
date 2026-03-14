@@ -142,7 +142,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                     datasources={
                         "matchData": {
                             "title": data["MENU_MATCHES"],
-                            "subtitle": data.get("MOVE_HISTORY_LABEL", "Move History") if move_history_list else data["WELCOME_MSG"],
+                            "subtitle": data.get("MOVE_HISTORY_LABEL", "Move History"),
                             "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
                             "boardUrl": get_board_image_url(fen),
                             "lastMove": last_move,
@@ -357,7 +357,14 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         else:
             engine = BoardManager(attr.get("board_fen"))
             
-        speech_text = f"Switched to {mode}"
+        mode_names = {
+            "matches": data.get("MENU_MATCHES", "Matches"),
+            "puzzles": data.get("MENU_PUZZLES", "Puzzles"),
+            "squares": data.get("MENU_SQUARES", "Squares")
+        }
+        display_mode = mode_names.get(mode, mode)
+        msg_template = data.get("MODE_SWITCHED", "Switched to {mode} mode.")
+        speech_text = msg_template.format(mode=display_mode)
         response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
         directive = get_apl_directive(handler_input, engine, "", type="matches")
         if directive:
