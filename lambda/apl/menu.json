@@ -1,0 +1,240 @@
+{
+  "type": "APL",
+  "version": "1.7",
+  "import": [
+    {
+      "name": "alexa-layouts",
+      "version": "1.7.0"
+    }
+  ],
+  "mainTemplate": {
+    "parameters": [
+      "payload"
+    ],
+    "items": [
+      {
+        "type": "Container",
+        "width": "100%",
+        "height": "100%",
+        "backgroundColor": "#F5F5F7",
+        "items": [
+          {
+            "type": "Frame",
+            "position": "absolute",
+            "width": "100%",
+            "height": "100%",
+            "backgroundColor": "#F5F5F7",
+            "background": {
+              "type": "linear-gradient",
+              "colorRange": [
+                "#FFFFFF",
+                "#E0E0E0"
+              ],
+              "angle": 135
+            }
+          },
+          {
+            "type": "Container",
+            "width": "100%",
+            "height": "100%",
+            "paddingTop": "5vh",
+            "paddingBottom": "5vh",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "items": [
+              {
+                "type": "Text",
+                "text": "${payload.menuData.title}",
+                "fontSize": "48dp",
+                "fontWeight": "800",
+                "color": "#1D1D1F",
+                "letterSpacing": "2dp",
+                "textAlign": "center",
+                "paddingBottom": "6vh"
+              },
+              {
+                "type": "Container",
+                "flexDirection": "row",
+                "width": "90%",
+                "justifyContent": "spaceAround",
+                "items": [
+                  {
+                    "type": "TouchWrapper",
+                    "onPress": [
+                      {
+                        "type": "SendEvent",
+                        "arguments": [
+                          "SwitchModeIntent",
+                          {
+                            "mode": "matches"
+                          }
+                        ]
+                      }
+                    ],
+                    "item": {
+                      "type": "Frame",
+                      "width": "28vw",
+                      "height": "40vh",
+                      "borderRadius": "24dp",
+                      "backgroundColor": "#FFFFFF",
+                      "borderWidth": "2dp",
+                      "borderColor": "#E5E5E5",
+                      "shadowColor": "#000000",
+                      "shadowOffset": {
+                        "width": 0,
+                        "height": 4
+                      },
+                      "shadowRadius": "12dp",
+                      "shadowOpacity": 0.1,
+                      "items": [
+                        {
+                          "type": "Container",
+                          "width": "100%",
+                          "height": "100%",
+                          "alignItems": "center",
+                          "justifyContent": "center",
+                          "padding": "20dp",
+                          "items": [
+                            {
+                              "type": "Text",
+                              "text": "♔",
+                              "fontSize": "80dp",
+                              "color": "#333333",
+                              "paddingBottom": "20dp"
+                            },
+                            {
+                              "type": "Text",
+                              "text": "${payload.menuData.matchesText}",
+                              "fontSize": "24dp",
+                              "fontWeight": "600",
+                              "color": "#1D1D1F",
+                              "textAlign": "center"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "TouchWrapper",
+                    "onPress": [
+                      {
+                        "type": "SendEvent",
+                        "arguments": [
+                          "SwitchModeIntent",
+                          {
+                            "mode": "puzzles"
+                          }
+                        ]
+                      }
+                    ],
+                    "item": {
+                      "type": "Frame",
+                      "width": "28vw",
+                      "height": "40vh",
+                      "borderRadius": "24dp",
+                      "backgroundColor": "#FFFFFF",
+                      "borderWidth": "2dp",
+                      "borderColor": "#E5E5E5",
+                      "shadowColor": "#000000",
+                      "shadowOffset": {
+                        "width": 0,
+                        "height": 4
+                      },
+                      "shadowRadius": "12dp",
+                      "shadowOpacity": 0.1,
+                      "items": [
+                        {
+                          "type": "Container",
+                          "width": "100%",
+                          "height": "100%",
+                          "alignItems": "center",
+                          "justifyContent": "center",
+                          "padding": "20dp",
+                          "items": [
+                            {
+                              "type": "Text",
+                              "text": "🧩",
+                              "fontSize": "80dp",
+                              "color": "#333333",
+                              "paddingBottom": "20dp"
+                            },
+                            {
+                              "type": "Text",
+                              "text": "${payload.menuData.puzzlesText}",
+                              "fontSize": "24dp",
+                              "fontWeight": "600",
+                              "color": "#1D1D1F",
+                              "textAlign": "center"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "TouchWrapper",
+                    "onPress": [
+                      {
+                        "type": "SendEvent",
+                        "arguments": [
+                          "SwitchModeIntent",
+                          {
+                            "mode": "squares"
+                          }
+                        ]
+                      }
+                    ],
+                    "item": {
+                      "type": "Frame",
+                      "width": "28vw",
+                      "height": "40vh",
+                      "borderRadius": "24dp",
+                      "backgroundColor": "#FFFFFF",
+                      "borderWidth": "2dp",
+                      "borderColor": "#E5E5E5",
+                      "shadowColor": "#000000",
+                      "shadowOffset": {
+                        "width": 0,
+                        "height": 4
+                      },
+                      "shadowRadius": "12dp",
+                      "shadowOpacity": 0.1,
+                      "items": [
+                        {
+                          "type": "Container",
+                          "width": "100%",
+                          "height": "100%",
+                          "alignItems": "center",
+                          "justifyContent": "center",
+                          "padding": "20dp",
+                          "items": [
+                            {
+                              "type": "Text",
+                              "text": "🏁",
+                              "fontSize": "80dp",
+                              "color": "#333333",
+                              "paddingBottom": "20dp"
+                            },
+                            {
+                              "type": "Text",
+                              "text": "${payload.menuData.squaresText}",
+                              "fontSize": "24dp",
+                              "fontWeight": "600",
+                              "color": "#1D1D1F",
+                              "textAlign": "center"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

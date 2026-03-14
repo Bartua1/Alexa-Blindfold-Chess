@@ -30,7 +30,11 @@ data = {
                 "B": "Bishop",
                 "N": "Knight",
                 "P": "Pawn"
-            }
+            },
+            "MENU_TITLE": "Blindfold Chess - Main Menu",
+            "MENU_MATCHES": "Play a Match",
+            "MENU_PUZZLES": "Puzzles",
+            "MENU_SQUARES": "Squares"
         }
     },
     "es": {
@@ -64,7 +68,11 @@ data = {
                 "B": "Alfil",
                 "N": "Caballo",
                 "P": "Peón"
-            }
+            },
+            "MENU_TITLE": "Ajedrez a Ciegas - Menú Principal",
+            "MENU_MATCHES": "Partida",
+            "MENU_PUZZLES": "Puzzles",
+            "MENU_SQUARES": "Casillas"
         }
     }
 }

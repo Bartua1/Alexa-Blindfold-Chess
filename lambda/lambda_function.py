@@ -28,19 +28,34 @@ def get_board_image_url(fen):
     encoded_fen = fen.replace(" ", "%20")
     return f"https://fen-to-image.com/image/{encoded_fen}"
 
-def get_apl_directive(handler_input, engine, last_move="Welcome!"):
+def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="board"):
     """Generates the APL RenderDocument directive if supported."""
     try:
+        data = handler_input.attributes_manager.request_attributes["_"]
         context = handler_input.request_envelope.context
         interfaces = context.system.device.supported_interfaces
-        viewport = getattr(context, "viewport", None)
-        
-        logger.info(f"Supported Interfaces: {interfaces}")
-        logger.info(f"Viewport present: {viewport is not None}")
         
         # Strict check: ensure the alexa_presentation_apl interface is present
         if interfaces.alexa_presentation_apl is not None:
-            # Use absolute path for robustness in Lambda
+            if type == "menu":
+                path = os.path.join(APL_PATH, "menu.json")
+                with open(path) as f:
+                    apl_doc = json.load(f)
+                return RenderDocumentDirective(
+                    document=apl_doc,
+                    datasources={
+                        "payload": {
+                            "menuData": {
+                                "title": data["MENU_TITLE"],
+                                "matchesText": data["MENU_MATCHES"],
+                                "puzzlesText": data["MENU_PUZZLES"],
+                                "squaresText": data["MENU_SQUARES"]
+                            }
+                        }
+                    }
+                )
+            
+            # Default to board
             path = os.path.join(APL_PATH, "chessboard.json")
             with open(path) as f:
                 apl_doc = json.load(f)
@@ -130,7 +145,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
         # Add APL if supported
-        directive = get_apl_directive(handler_input, engine)
+        directive = get_apl_directive(handler_input, type="menu")
         if directive:
             response_builder.add_directive(directive)
             
