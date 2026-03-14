@@ -511,7 +511,7 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         time_text = f"<font color='{time_color}'>{data['TIME_TAKEN_LABEL'].format(time=elapsed_time, arrow=arrow)}</font>"
         
         if is_correct:
-            speech_text = data["NEXT_SQUARE"].format(square=new_square)
+            speech_text = f"{data['CORRECT_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
             feedback_text = f"<font color='{color_green}'>{data['CORRECT_ANSWER']}</font>"
             # Rating logic for correct answers
             if elapsed_time < 10:
