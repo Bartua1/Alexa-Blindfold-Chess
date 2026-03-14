@@ -50,17 +50,17 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                                 "listItems": [
                                     {
                                         "primaryText": data["MENU_MATCHES"],
-                                        "imageSource": "https://img.icons8.com/isometric/512/chess-king.png",
+                                        "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/match.png",
                                         "value": "matches"
                                     },
                                     {
                                         "primaryText": data["MENU_PUZZLES"],
-                                        "imageSource": "https://img.icons8.com/isometric/512/puzzle.png",
+                                        "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
                                         "value": "puzzles"
                                     },
                                     {
                                         "primaryText": data["MENU_SQUARES"],
-                                        "imageSource": "https://img.icons8.com/isometric/512/checkered-flag.png",
+                                        "imageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
                                         "value": "squares"
                                     }
                                 ],

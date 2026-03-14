@@ -18,7 +18,7 @@
         "headerTitle": "${payload.menuData.title}",
         "headerBackButton": false,
         "headerDivider": true,
-        "backgroundImageSource": "https://img.freepik.com/free-photo/white-marble-texture-background-high-resolution_34261-755.jpg",
+        "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
         "backgroundBlur": false,
         "backgroundColorOverlay": true,
         "imageAspectRatio": "portrait",
