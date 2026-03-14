@@ -49,10 +49,7 @@
             "jugar {mode}",
             "cambia de modo",
             "{mode}",
-            "modo {mode}",
-            "casillas",
-            "puzzles",
-            "partidas"
+            "modo {mode}"
           ]
         },
         {

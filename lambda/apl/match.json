@@ -75,14 +75,35 @@
                                         "color": "@colorTextPrimary"
                                     },
                                     {
-                                        "type": "ScrollView",
+                                        "type": "Sequence",
                                         "grow": 1,
                                         "marginTop": "@spacingSmall",
+                                        "data": "${matchData.moveHistory}",
                                         "item": {
-                                            "type": "Text",
-                                            "text": "${matchData.moveHistory}",
-                                            "style": "textStyleBody",
-                                            "lineHeight": 1.5
+                                            "type": "Container",
+                                            "direction": "row",
+                                            "paddingBottom": "@spacingXSmall",
+                                            "items": [
+                                                {
+                                                    "type": "Text",
+                                                    "text": "${data.number}",
+                                                    "width": "20%",
+                                                    "style": "textStyleBody",
+                                                    "color": "@colorTextSecondary"
+                                                },
+                                                {
+                                                    "type": "Text",
+                                                    "text": "${data.white}",
+                                                    "width": "40%",
+                                                    "style": "textStyleBody"
+                                                },
+                                                {
+                                                    "type": "Text",
+                                                    "text": "${data.black}",
+                                                    "width": "40%",
+                                                    "style": "textStyleBody"
+                                                }
+                                            ]
                                         }
                                     },
                                     {
