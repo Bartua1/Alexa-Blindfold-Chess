@@ -96,7 +96,8 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                             "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
                             "boardUrl": squares_data.get("boardUrl", get_board_image_url()),
                             "currentQuestion": squares_data.get("currentQuestion", ""),
-                            "timeText": squares_data.get("timeText", "")
+                            "timeText": squares_data.get("timeText", ""),
+                            "ratingNumber": squares_data.get("ratingNumber", 0)
                         }
                     }
                 )
@@ -232,7 +233,8 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
                 "feedback": "",
                 "isCorrect": True,
                 "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
-                "timeText": ""
+                "timeText": "",
+                "ratingNumber": 0
             }
             directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
             if directive:
@@ -371,9 +373,15 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         if is_correct:
             speech_text = data["NEXT_SQUARE"].format(square=new_square)
             feedback_text = f"<font color='{color_green}'>{data['CORRECT_ANSWER']}</font>"
+            # Rating logic for correct answers
+            if elapsed_time < 10:
+                rating_number = 5
+            else:
+                rating_number = max(0, 5.0 - ((elapsed_time - 10) // 5 + 1) * 0.5)
         else:
             speech_text = f"{data['WRONG_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
             feedback_text = f"<font color='{color_red}'>{data['WRONG_ANSWER']}</font>"
+            rating_number = 0
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
@@ -383,7 +391,8 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             "feedback": feedback_text,
             "isCorrect": is_correct,
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
-            "timeText": time_text
+            "timeText": time_text,
+            "ratingNumber": rating_number
         }
         
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
