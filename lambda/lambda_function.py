@@ -348,6 +348,16 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         new_square = random.choice([f"{f}{r}" for f in "abcdefgh" for r in "12345678"])
         attr["current_square"] = new_square
 
+        # Calculate time taken
+        elapsed_time = round(time.time() - attr.get("start_time", time.time()), 1)
+        last_time = attr.get("last_time")
+        arrow = ""
+        if last_time is not None:
+            if elapsed_time < last_time:
+                arrow = "↓"
+            elif elapsed_time > last_time:
+                arrow = "↑"
+
         color_green = "#2E7D32"
         color_red = "#C62828"
         
