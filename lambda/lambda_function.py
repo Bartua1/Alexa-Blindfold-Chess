@@ -60,8 +60,7 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
             )
     except Exception as e:
         logger.error(f"Error generating APL: {e}", exc_info=True)
-    return None
-
+def get_puzzles():
     # Use path relative to this script for robust loading in any environment
     script_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(script_dir, "puzzles.json")
