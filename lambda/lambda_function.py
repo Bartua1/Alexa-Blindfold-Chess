@@ -359,7 +359,7 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
             
         speech_text = f"Switched to {mode}"
         response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
-        directive = get_apl_directive(handler_input, engine, speech_text, type="matches")
+        directive = get_apl_directive(handler_input, engine, "", type="matches")
         if directive:
             response_builder.add_directive(directive)
         return response_builder.response

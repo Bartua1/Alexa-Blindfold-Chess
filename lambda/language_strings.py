@@ -32,7 +32,7 @@ data = {
                 "P": "Pawn"
             },
             "MENU_TITLE": "Blindfold Chess - Main Menu",
-            "MENU_MATCHES": "Play a Match",
+            "MENU_MATCHES": "Match",
             "MENU_MATCHES_SUB": "Play against AI",
             "MENU_PUZZLES": "Puzzles",
             "MENU_PUZZLES_SUB": "Solve challenges",
@@ -87,7 +87,7 @@ data = {
                 "P": "Peón"
             },
             "MENU_TITLE": "Ajedrez a Ciegas - Menú Principal",
-            "MENU_MATCHES": "Partida",
+            "MENU_MATCHES": "Partidas",
             "MENU_MATCHES_SUB": "Juega contra la IA",
             "MENU_PUZZLES": "Puzzles",
             "MENU_PUZZLES_SUB": "Resuelve retos",

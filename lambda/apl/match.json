@@ -42,7 +42,7 @@
                         "items": [
                             {
                                 "type": "Container",
-                                "width": "45%",
+                                "width": "60%",
                                 "height": "100%",
                                 "justifyContent": "center",
                                 "items": [
@@ -58,22 +58,23 @@
                                         "text": "${matchData.lastMove}",
                                         "style": "textStyleBody",
                                         "textAlign": "center",
-                                        "marginTop": "@spacingSmall"
+                                        "marginTop": "@spacingSmall",
+                                        "color": "#1a1a1a"
                                     }
                                 ]
                             },
                             {
                                 "type": "Container",
-                                "width": "55%",
+                                "width": "40%",
                                 "height": "100%",
                                 "paddingLeft": "@spacingLarge",
                                 "items": [
                                     {
                                         "type": "Text",
-                                        "text": "Move History",
+                                        "text": "${matchData.subtitle}",
                                         "style": "textStyleSubhead",
                                         "fontWeight": "bold",
-                                        "color": "@colorTextPrimary"
+                                        "color": "#1a1a1a"
                                     },
                                     {
                                         "type": "Sequence",
@@ -90,19 +91,21 @@
                                                     "text": "${data.number}",
                                                     "width": "20%",
                                                     "style": "textStyleBody",
-                                                    "color": "@colorTextSecondary"
+                                                    "color": "#4a4a4a"
                                                 },
                                                 {
                                                     "type": "Text",
                                                     "text": "${data.white}",
                                                     "width": "40%",
-                                                    "style": "textStyleBody"
+                                                    "style": "textStyleBody",
+                                                    "color": "#1a1a1a"
                                                 },
                                                 {
                                                     "type": "Text",
                                                     "text": "${data.black}",
                                                     "width": "40%",
-                                                    "style": "textStyleBody"
+                                                    "style": "textStyleBody",
+                                                    "color": "#1a1a1a"
                                                 }
                                             ]
                                         }
