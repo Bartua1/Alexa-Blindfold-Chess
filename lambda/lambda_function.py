@@ -78,6 +78,17 @@ def get_square_color(square):
     rank = int(square[1]) - 1
     return "black" if (file + rank) % 2 == 0 else "white"
 
+def get_resolved_value(slot):
+    """Safely extracts the first resolved value from an Alexa slot."""
+    if not slot or not slot.resolutions or not slot.resolutions.resolutions_per_authority:
+        return slot.value if slot else None
+        
+    for resolution in slot.resolutions.resolutions_per_authority:
+        if resolution.status.code.value == "ER_SUCCESS_MATCH":
+            return resolution.values[0].value.name
+            
+    return slot.value
+
 class LaunchRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return is_request_type("LaunchRequest")(handler_input)
@@ -111,9 +122,13 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
         
-        mode = handler_input.request_envelope.request.intent.slots["mode"].value
-        if not mode:
-            mode = "matches" # Default fallback
+        slot = handler_input.request_envelope.request.intent.slots.get("mode")
+        mode = get_resolved_value(slot)
+        
+        if not mode or mode not in ["matches", "puzzles", "squares"]:
+            # Better clarification instead of just switching
+            speech_text = data.get("HELP_MSG", "You can play a Match, practice with Puzzles, or train your visualization with Squares. Which one?")
+            return handler_input.response_builder.speak(speech_text).ask(speech_text).response
             
         attr["mode"] = mode
         speech_text = data["MODE_SWITCHED"].format(mode=mode)
@@ -236,9 +251,14 @@ class SquareColorIntentHandler(AbstractRequestHandler):
 
 class PuzzleIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
-        return (is_intent_name("PuzzleIntent")(handler_input) or 
-                (is_intent_name("SwitchModeIntent")(handler_input) and 
-                 handler_input.request_envelope.request.intent.slots["mode"].value == "puzzles"))
+        if is_intent_name("PuzzleIntent")(handler_input):
+            return True
+            
+        if is_intent_name("SwitchModeIntent")(handler_input):
+            slot = handler_input.request_envelope.request.intent.slots.get("mode")
+            return get_resolved_value(slot) == "puzzles"
+            
+        return False
 
     def handle(self, handler_input):
         data = handler_input.attributes_manager.request_attributes["_"]
