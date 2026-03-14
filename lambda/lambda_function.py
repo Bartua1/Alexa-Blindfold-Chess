@@ -62,6 +62,26 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
             )
     except Exception as e:
         logger.error(f"Error generating APL: {e}", exc_info=True)
+
+def get_verbal_board_description(engine, data):
+    """Returns a spoken description of the board state."""
+    positions = engine.get_piece_positions()
+    
+    def format_list(pieces):
+        return ", ".join([
+            data["PIECE_POSITION"].format(
+                piece=data["PIECES"][p["piece"]], 
+                square=p["square"]
+            ) for p in pieces
+        ])
+    
+    white_pieces = format_list(positions["white"])
+    black_pieces = format_list(positions["black"])
+    
+    return data["BOARD_DESCRIPTION"].format(
+        white_pieces=white_pieces, 
+        black_pieces=black_pieces
+    )
 def get_puzzles():
     # Use path relative to this script for robust loading in any environment
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -269,6 +289,8 @@ class PuzzleIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
+        locale = handler_input.request_envelope.request.locale
+        is_spanish = locale.startswith("es")
         
         current_puzzle_id = attr.get("puzzle_id")
         puzzles = get_puzzles()
@@ -281,15 +303,20 @@ class PuzzleIntentHandler(AbstractRequestHandler):
             
         puzzle = random.choice(available_puzzles)
         
+        # Determine localized description
+        puzzle_desc = puzzle.get("description_es") if is_spanish else puzzle.get("description")
+        if not puzzle_desc:
+            puzzle_desc = puzzle.get("description")
+            
         # Determine greeting
         if attr.get("mode") == "puzzles":
             if attr.get("puzzle_solved"):
-                speech_text = data["NEXT_PUZZLE"].format(description=puzzle["description"])
+                speech_text = data["NEXT_PUZZLE"].format(description=puzzle_desc)
             else:
                 # If they just asked for a puzzle while in the middle of one, maybe they want a new one or just a reminder
-                speech_text = data["PUZZLE_RETRY"].format(description=puzzle["description"])
+                speech_text = data["PUZZLE_RETRY"].format(description=puzzle_desc)
         else:
-            speech_text = data["PUZZLES_MODE_START"].format(description=puzzle["description"])
+            speech_text = data["PUZZLES_MODE_START"].format(description=puzzle_desc)
             
         attr["mode"] = "puzzles"
         attr["board_fen"] = puzzle["fen"]
@@ -298,9 +325,15 @@ class PuzzleIntentHandler(AbstractRequestHandler):
         attr["puzzle_solved"] = False
         
         engine = BoardManager(puzzle["fen"])
+        
+        # Add verbal description if APL is not supported
+        interfaces = handler_input.request_envelope.context.system.device.supported_interfaces
+        if interfaces.alexa_presentation_apl is None:
+            speech_text += " " + get_verbal_board_description(engine, data)
+            
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
-        directive = get_apl_directive(handler_input, engine, puzzle["description"])
+        directive = get_apl_directive(handler_input, engine, puzzle_desc)
         if directive:
             response_builder.add_directive(directive)
             

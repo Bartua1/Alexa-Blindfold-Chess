@@ -20,7 +20,17 @@ data = {
             "NEXT_SQUARE": "Correct! Next one: what color is {square}?",
             "NEXT_PUZZLE": "Here is the next challenge. {description}. What is your move?",
             "PUZZLE_RETRY": "Give it another try. {description}",
-            "READY_FOR_NEXT": "Ready for the next puzzle?"
+            "READY_FOR_NEXT": "Ready for the next puzzle?",
+            "BOARD_DESCRIPTION": "The board status is: White pieces: {white_pieces}. Black pieces: {black_pieces}.",
+            "PIECE_POSITION": "{piece} at {square}",
+            "PIECES": {
+                "K": "King",
+                "Q": "Queen",
+                "R": "Rook",
+                "B": "Bishop",
+                "N": "Knight",
+                "P": "Pawn"
+            }
         }
     },
     "es": {
@@ -44,7 +54,17 @@ data = {
             "NEXT_SQUARE": "¡Correcto! Siguiente: ¿de qué color es {square}?",
             "NEXT_PUZZLE": "Aquí tienes el siguiente reto. {description}. ¿Cuál es tu movimiento?",
             "PUZZLE_RETRY": "Inténtalo de nuevo. {description}",
-            "READY_FOR_NEXT": "¿Preparado para el siguiente puzzle?"
+            "READY_FOR_NEXT": "¿Preparado para el siguiente puzzle?",
+            "BOARD_DESCRIPTION": "El estado del tablero es: Piezas blancas: {white_pieces}. Piezas negras: {black_pieces}.",
+            "PIECE_POSITION": "{piece} en {square}",
+            "PIECES": {
+                "K": "Rey",
+                "Q": "Reina",
+                "R": "Torre",
+                "B": "Alfil",
+                "N": "Caballo",
+                "P": "Peón"
+            }
         }
     }
 }
