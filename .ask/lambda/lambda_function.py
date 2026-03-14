@@ -26,14 +26,15 @@ APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
 def get_board_image_url(fen=None, highlight=None):
     """Returns a URL to a rendered board image using the local server."""
     base_url = "https://bartualfdez.asuscomm.com/blindfoldchess/chessboard"
-    if highlight:
-        return f"{base_url}?highlight={highlight}"
     
-    # Fallback to fen-to-image for standard matches if no local fen renderer is implemented yet
-    # But for squares mode, we only need the local highlighted board
+    params = []
+    if highlight:
+        params.append(f"highlight={highlight}")
     if fen:
-        encoded_fen = fen.replace(" ", "%20")
-        return f"https://fen-to-image.com/image/{encoded_fen}"
+        params.append(f"fen={fen.replace(' ', '%20')}")
+        
+    if params:
+        return f"{base_url}?{'&'.join(params)}"
     
     return base_url
 
@@ -90,26 +91,35 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 return RenderDocumentDirective(
                     document=apl_doc,
                     datasources={
-                        "payload": {
-                            "detailImageRightData": {
-                                "title": squares_data.get("title", data["MENU_SQUARES"]),
-                                "subtitle": squares_data.get("feedback", ""),
-                                "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
-                                "image": {
-                                    "sources": [{"url": squares_data.get("boardUrl", get_board_image_url())}],
-                                    "contentDescription": "Chessboard"
-                                },
-                                "textContent": {
-                                    "primaryText": {"text": squares_data.get("currentQuestion", "")},
-                                    "secondaryText": {"text": squares_data.get("timeText", "")},
-                                    "rating": {"number": 0, "text": ""},
-                                    "locationText": {"text": ""}
-                                },
-                                "buttons": [{"text": "Next"}, {"text": "Stop"}],
-                                "backgroundImage": {
-                                    "sources": [{"url": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png"}]
-                                }
-                            }
+                        "squaresData": {
+                            "title": squares_data.get("title", data["MENU_SQUARES"]),
+                            "feedback": squares_data.get("feedback", ""),
+                            "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/squares.png",
+                            "boardUrl": squares_data.get("boardUrl", get_board_image_url()),
+                            "currentQuestion": squares_data.get("currentQuestion", ""),
+                            "timeText": squares_data.get("timeText", ""),
+                            "ratingNumber": squares_data.get("ratingNumber", 0)
+                        }
+                    }
+                )
+            
+            if type == "puzzles":
+                path = os.path.join(APL_PATH, "puzzles.json")
+                with open(path) as f:
+                    apl_doc = json.load(f)
+                
+                puzzle_data = engine if isinstance(engine, dict) else {}
+                
+                return RenderDocumentDirective(
+                    document=apl_doc,
+                    datasources={
+                        "puzzleData": {
+                            "title": data["MENU_PUZZLES"],
+                            "subtitle": puzzle_data.get("subtitle", ""),
+                            "feedback": puzzle_data.get("feedback", ""),
+                            "logoUrl": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/puzzles.png",
+                            "boardUrl": puzzle_data.get("boardUrl", get_board_image_url(puzzle_data.get("fen"))),
+                            "description": puzzle_data.get("description", "")
                         }
                     }
                 )
@@ -245,7 +255,8 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
                 "feedback": "",
                 "isCorrect": True,
                 "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
-                "timeText": ""
+                "timeText": "",
+                "ratingNumber": 0
             }
             directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
             if directive:
@@ -309,7 +320,15 @@ class MoveIntentHandler(AbstractRequestHandler):
                 speech_text = data["WRONG_ANSWER"]
             
             response_builder = handler_input.response_builder.speak(speech_text).ask("What is your move?")
-            directive = get_apl_directive(handler_input, engine, f"Puzzle Solution: {solution}")
+            
+            puzzle_info = {
+                "fen": engine.get_fen(),
+                "description": attr.get("puzzle_description", ""),
+                "feedback": data["CORRECT_ANSWER"] if attr.get("puzzle_solved") else data["WRONG_ANSWER"],
+                "subtitle": f"Solution: {solution}" if attr.get("puzzle_solved") else "Try to solve it!"
+            }
+            
+            directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
             if directive:
                 response_builder.add_directive(directive)
             return response_builder.response
@@ -370,18 +389,29 @@ class SquareColorIntentHandler(AbstractRequestHandler):
                 arrow = "↓"
             elif elapsed_time > last_time:
                 arrow = "↑"
+
+        color_green = "#2E7D32"
+        color_red = "#C62828"
         
         attr["last_time"] = elapsed_time
         attr["start_time"] = time.time() # Reset for next
         
-        time_text = data["TIME_TAKEN_LABEL"].format(time=elapsed_time, arrow=arrow)
+        # Determine color for time based on trend
+        time_color = color_green if last_time is None or elapsed_time <= last_time else color_red
+        time_text = f"<font color='{time_color}'>{data['TIME_TAKEN_LABEL'].format(time=elapsed_time, arrow=arrow)}</font>"
         
         if is_correct:
             speech_text = data["NEXT_SQUARE"].format(square=new_square)
-            feedback_text = data["CORRECT_ANSWER"]
+            feedback_text = f"<font color='{color_green}'>{data['CORRECT_ANSWER']}</font>"
+            # Rating logic for correct answers
+            if elapsed_time < 10:
+                rating_number = 5
+            else:
+                rating_number = max(0, 5.0 - ((elapsed_time - 10) // 5 + 1) * 0.5)
         else:
             speech_text = f"{data['WRONG_ANSWER']} {data['NEXT_SQUARE'].format(square=new_square)}"
-            feedback_text = data["WRONG_ANSWER"]
+            feedback_text = f"<font color='{color_red}'>{data['WRONG_ANSWER']}</font>"
+            rating_number = 0
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
@@ -391,7 +421,8 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             "feedback": feedback_text,
             "isCorrect": is_correct,
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
-            "timeText": time_text
+            "timeText": time_text,
+            "ratingNumber": rating_number
         }
         
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
@@ -448,6 +479,7 @@ class PuzzleIntentHandler(AbstractRequestHandler):
         attr["puzzle_solution"] = puzzle["solution"]
         attr["puzzle_id"] = puzzle["id"]
         attr["puzzle_solved"] = False
+        attr["puzzle_description"] = puzzle_desc
         
         engine = BoardManager(puzzle["fen"])
         
@@ -458,7 +490,14 @@ class PuzzleIntentHandler(AbstractRequestHandler):
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
-        directive = get_apl_directive(handler_input, engine, puzzle_desc)
+        puzzle_info = {
+            "fen": puzzle["fen"],
+            "description": puzzle_desc,
+            "feedback": "",
+            "subtitle": "Solve the puzzle!"
+        }
+        
+        directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
         if directive:
             response_builder.add_directive(directive)
             

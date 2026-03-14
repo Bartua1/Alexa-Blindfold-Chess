@@ -55,6 +55,11 @@ def get_chessboard():
         color_dark = (181, 136, 99, 255)    # Wood-ish dark
         color_highlight = (100, 200, 100, 180) # Semi-transparent green
         
+        # Mapping pieces to solid Unicode figures
+        UNICODE_PIECES = {
+            'K': '♚', 'Q': '♛', 'R': '♜', 'B': '♝', 'N': '♞', 'P': '♟'
+        }
+        
         # Use RGBA to support transparency for the highlight
         img = Image.new('RGBA', (size, size), color_light)
         draw = ImageDraw.Draw(img)
@@ -72,26 +77,28 @@ def get_chessboard():
         # Draw pieces if FEN is provided
         if fen:
             try:
-                # Load font - using common fonts on macOS
-                # Fallback list for cross-platform robustness
+                # Load font - using common fonts on macOS and Linux
                 font_paths = [
-                    "/Users/bartua1/Library/Fonts/JetBrainsMonoNerdFont-Regular.ttf",
-                    "/System/Library/Fonts/Supplemental/Arial.ttf",
-                    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" 
+                    "/System/Library/Fonts/Apple Symbols.ttf",
+                    "/Library/Fonts/Arial Unicode.ttf",
+                    "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+                    "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                    "/Users/bartua1/Library/Fonts/JetBrainsMonoNerdFont-Regular.ttf"
                 ]
                 font = None
                 for path in font_paths:
                     if os.path.exists(path):
                         try:
-                            font = ImageFont.truetype(path, int(square_size * 0.7))
+                            # Use a slightly larger font size for figures
+                            font = ImageFont.truetype(path, int(square_size * 0.8))
                             logger.info(f"Using font: {path}")
                             break
                         except Exception as e:
                             logger.error(f"Failed to load font {path}: {e}")
                 
                 if not font:
-                    logger.info("Falling back to default scalable font")
+                    logger.info("Falling back to default scalable font (may not support figures)")
                     font = ImageFont.load_default(size=int(square_size * 0.7))
 
                 board = chess.Board(fen)
@@ -108,6 +115,8 @@ def get_chessboard():
                         y = row * square_size + square_size // 2
                         
                         symbol = piece.symbol().upper()
+                        figure = UNICODE_PIECES.get(symbol, symbol)
+                        
                         # Color: White pieces white with black outline, Black pieces black with white outline
                         if piece.color == chess.WHITE:
                             fill_color = (255, 255, 255, 255)
@@ -116,7 +125,7 @@ def get_chessboard():
                             fill_color = (0, 0, 0, 255)
                             stroke_color = (255, 255, 255, 255)
                         
-                        draw.text((x, y), symbol, fill=fill_color, font=font, anchor="mm", 
+                        draw.text((x, y), figure, fill=fill_color, font=font, anchor="mm", 
                                   stroke_width=2, stroke_fill=stroke_color)
                 
                 logger.info(f"Rendered {piece_count} pieces on the board.")
