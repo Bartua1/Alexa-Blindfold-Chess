@@ -19,12 +19,10 @@
         "height": "100%",
         "items": [
           {
-            "type": "Image",
-            "source": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
-            "width": "100%",
-            "height": "100%",
-            "scale": "best-fill",
-            "position": "absolute"
+            "type": "AlexaBackground",
+            "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
+            "backgroundOverlay": true,
+            "backgroundBlur": false
           },
           {
             "type": "AlexaHeader",
@@ -44,17 +42,17 @@
             "items": [
               {
                 "type": "Container",
-                "width": "48vw",
+                "width": "50%",
                 "height": "100%",
                 "alignItems": "center",
                 "justifyContent": "center",
                 "items": [
                   {
                     "type": "Frame",
-                    "width": "42vw",
-                    "height": "42vw",
-                    "maxWidth": "65vh",
-                    "maxHeight": "65vh",
+                    "width": "60vh",
+                    "height": "60vh",
+                    "maxWidth": "44vw",
+                    "maxHeight": "44vw",
                     "borderRadius": "24dp",
                     "backgroundColor": "white",
                     "shadowColor": "black",
@@ -62,28 +60,21 @@
                     "shadowRadius": "12dp",
                     "padding": "12dp",
                     "item": {
-                      "type": "Container",
+                      "type": "Image",
+                      "source": "${squaresData.boardUrl}",
                       "width": "100%",
                       "height": "100%",
-                      "alignItems": "center",
-                      "justifyContent": "center",
-                      "item": {
-                        "type": "Image",
-                        "source": "${squaresData.boardUrl}",
-                        "width": "100%",
-                        "height": "100%",
-                        "scale": "best-fit",
-                        "opacity": "${squaresData.boardUrl == '' || squaresData.boardUrl == null ? 0 : 1}"
-                      }
+                      "scale": "best-fit",
+                      "opacity": "${squaresData.boardUrl == '' || squaresData.boardUrl == null ? 0 : 1}"
                     }
                   }
                 ]
               },
               {
                 "type": "Container",
-                "width": "42vw",
+                "width": "45%",
                 "height": "100%",
-                "paddingLeft": "20dp",
+                "paddingLeft": "4vw",
                 "alignItems": "center",
                 "justifyContent": "center",
                 "items": [

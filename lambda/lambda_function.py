@@ -227,7 +227,7 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
             
             response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
             squares_info = {
-                "boardUrl": get_board_image_url(), # No highlight on first load
+                "boardUrl": get_board_image_url(highlight=square), 
                 "feedback": "",
                 "isCorrect": True,
                 "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square
@@ -357,7 +357,7 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         
         # Add APL for Squares Mode
         squares_info = {
-            "boardUrl": get_board_image_url(highlight=current_square),
+            "boardUrl": get_board_image_url(highlight=new_square),
             "feedback": feedback_text,
             "isCorrect": is_correct,
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square
