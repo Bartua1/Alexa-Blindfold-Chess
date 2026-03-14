@@ -1,6 +1,6 @@
 {
   "type": "APL",
-  "version": "1.8",
+  "version": "1.7",
   "import": [
     {
       "name": "alexa-layouts",
@@ -21,7 +21,7 @@
         "justifyContent": "center",
         "items": [
           {
-            "type": "Container",
+            "type": "Container",  
             "position": "absolute",
             "width": "100%",
             "height": "100%",

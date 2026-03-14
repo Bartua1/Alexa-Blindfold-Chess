@@ -38,8 +38,8 @@ def get_apl_directive(handler_input, engine, last_move="Welcome!"):
         logger.info(f"Supported Interfaces: {interfaces}")
         logger.info(f"Viewport present: {viewport is not None}")
         
-        # Robust check: either interface is present or a viewport is reported
-        if interfaces.alexa_presentation_apl is not None or viewport is not None:
+        # Strict check: ensure the alexa_presentation_apl interface is present
+        if interfaces.alexa_presentation_apl is not None:
             # Use absolute path for robustness in Lambda
             path = os.path.join(APL_PATH, "chessboard.json")
             with open(path) as f:
