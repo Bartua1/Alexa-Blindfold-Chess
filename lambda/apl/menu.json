@@ -16,9 +16,11 @@
       {
         "type": "AlexaImageList",
         "id": "menuList",
+        "theme": "light",
         "headerTitle": "${imageListData.title}",
         "headerBackButton": false,
         "headerDivider": true,
+        "backgroundColor": "white",
         "backgroundImageSource": "https://bartualfdez.asuscomm.com/blindfoldchess/assets/images/background.png",
         "backgroundBlur": false,
         "backgroundColorOverlay": false,
