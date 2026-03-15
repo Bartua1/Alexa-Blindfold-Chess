@@ -387,6 +387,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
         if mode in ["matches", "puzzles", "squares"]:
             # Resume existing session
             attr["resuming"] = True
+            logger.info(f"Resuming session. Mode: {mode}, Attr: {attr}")
             speech_text = data.get("WELCOME_BACK", "Welcome back! You were playing {mode}. Should we continue?").format(mode=mode)
             
             if mode == "matches":
@@ -511,7 +512,7 @@ class MoveIntentHandler(AbstractRequestHandler):
             ai_move = engine.get_ai_move()
             
             # Record AI move in history
-            history = attr.get("move_history", [])
+            history = list(attr.get("move_history", []))
             history.append(ai_move)
             attr["move_history"] = history
 
@@ -558,7 +559,7 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         is_correct = user_color and user_color.lower() == correct_color
         
         # Track history
-        history = attr.get("squares_history", {})
+        history = dict(attr.get("squares_history", {}))
         history[current_square] = "C" if is_correct else "W"
         attr["squares_history"] = history
         if is_correct:
@@ -922,6 +923,13 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
             now = time.time()
             session_duration = round(now - attr["squares_session_start_time"], 1)
             attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + session_duration
+        
+        # Explicitly save state on session end (response interceptors don't run here)
+        try:
+            handler_input.attributes_manager.save_persistent_attributes()
+            logger.info("SessionEndedRequest: Explicitly saved persistent attributes.")
+        except Exception as e:
+            logger.warning(f"SessionEndedRequest: Failed to save: {e}")
 
         return handler_input.response_builder.response
 
@@ -970,11 +978,13 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
             persist_keys = [
                 "mode", "board_fen", "move_history", 
                 "squares_history", "squares_correct_count", "squares_accumulated_time", "current_square",
-                "puzzle_id", "puzzle_solved", "puzzle_description", "puzzle_solution"
+                "puzzle_id", "puzzle_solved", "puzzle_description", "puzzle_solution", "lives"
             ]
             for key in persist_keys:
                 if key in persistent_attr:
                     attr[key] = persistent_attr[key]
+            
+            logger.info(f"Loaded persistent attributes into session: {attr}")
             
             # Migration/Compatibility for Squares timing
             if attr.get("mode") == "squares":
@@ -1009,11 +1019,17 @@ class SavePersistenceInterceptor(AbstractResponseInterceptor):
         persist_keys = [
             "mode", "board_fen", "move_history", 
             "squares_history", "squares_correct_count", "squares_accumulated_time", "current_square",
-            "puzzle_id", "puzzle_solved", "puzzle_description", "puzzle_solution"
+            "puzzle_id", "puzzle_solved", "puzzle_description", "puzzle_solution", "lives"
         ]
+        sync_happened = False
         for key in persist_keys:
             if key in attr:
-                persistent_attr[key] = attr[key]
+                if persistent_attr.get(key) != attr[key]:
+                    persistent_attr[key] = attr[key]
+                    sync_happened = True
+        
+        if sync_happened:
+            logger.info(f"Syncing session to persistent attributes: {persistent_attr}")
         
         try:
             handler_input.attributes_manager.save_persistent_attributes()

@@ -105,7 +105,7 @@ def get_chessboard():
             y0 = row * square_size
             x1 = x0 + square_size
             y1 = y0 + square_size
-            # Highlight with semi-transparent blue
+            # Highlight with semi-transparent blue and distinct outline
             draw.rectangle([x0, y0, x1, y1], fill=color_highlight, outline=(0, 0, 100, 255), width=4)
             
         # Draw pieces if FEN is provided
@@ -166,16 +166,15 @@ def get_chessboard():
             except Exception as e:
                 logger.error(f"Error drawing pieces: {e}")
 
-        # Highlight square if requested
-        if len(highlight) == 2 and highlight[0] in 'abcdefgh' and highlight[1] in '12345678':
+        # Re-highlight square if pieces drawn to ensure visibility (no-op for squares mode)
+        if fen and len(highlight) == 2 and highlight[0] in 'abcdefgh' and highlight[1] in '12345678':
             col = ord(highlight[0]) - ord('a')
             row = 8 - int(highlight[1])
             x0 = col * square_size
             y0 = row * square_size
             x1 = x0 + square_size
             y1 = y0 + square_size
-            # Highlight with semi-transparent green
-            draw.rectangle([x0, y0, x1, y1], fill=color_highlight, outline=(0, 100, 0, 255), width=4)
+            draw.rectangle([x0, y0, x1, y1], fill=color_highlight, outline=(0, 0, 100, 255), width=4)
             
         # Convert to RGB before saving as PNG if necessary, but PNG supports RGBA
         img_io = io.BytesIO()
