@@ -5,9 +5,13 @@ from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExceptionHandler, AbstractRequestInterceptor, AbstractResponseInterceptor
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
-from ask_sdk_core.skill_builder import CustomSkillBuilder
-from ask_sdk_dynamodb.adapter import DynamoDbPersistenceAdapter
+from ask_sdk_core.skill_builder import SkillBuilder, CustomSkillBuilder
 from ask_sdk_model import Response
+try:
+    from ask_sdk_dynamodb.adapter import DynamoDbPersistenceAdapter
+    DYNAMODB_AVAILABLE = True
+except ImportError:
+    DYNAMODB_AVAILABLE = False
 from ask_sdk_model.interfaces.alexa.presentation.apl import RenderDocumentDirective
 import json
 import os
@@ -287,7 +291,7 @@ def handle_switch_mode(handler_input, mode):
     """Common logic for switching between game modes (Matches, Puzzles, Squares)."""
     data = handler_input.attributes_manager.request_attributes["_"]
     attr = handler_input.attributes_manager.session_attributes
-    persistent_attr = handler_input.attributes_manager.persistent_attributes
+    persistent_attr = handler_input.attributes_manager.persistent_attributes or {}
     
     if mode == "squares":
         lives = persistent_attr.get("lives", 5)
@@ -842,8 +846,12 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
 class LoadPersistenceInterceptor(AbstractRequestInterceptor):
     def process(self, handler_input):
-        persistent_attr = handler_input.attributes_manager.persistent_attributes
-        if not persistent_attr:
+        try:
+            persistent_attr = handler_input.attributes_manager.persistent_attributes
+        except Exception:
+            persistent_attr = None
+            
+        if persistent_attr is None:
             persistent_attr = {}
             handler_input.attributes_manager.persistent_attributes = persistent_attr
 
@@ -854,15 +862,30 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
         if last_reset != today:
             persistent_attr["lives"] = 5
             persistent_attr["last_reset_date"] = today
-            handler_input.attributes_manager.save_persistent_attributes()
+            try:
+                handler_input.attributes_manager.save_persistent_attributes()
+            except Exception:
+                logger.warning("Failed to save persistent attributes (persistence may not be configured)")
 
 class SavePersistenceInterceptor(AbstractResponseInterceptor):
     def process(self, handler_input, response):
-        handler_input.attributes_manager.save_persistent_attributes()
+        try:
+            handler_input.attributes_manager.save_persistent_attributes()
+        except Exception:
+            pass
 
-# Initialize Skill Builder with Persistence
-persistence_adapter = DynamoDbPersistenceAdapter(table_name="BlindfoldChessData")
-sb = CustomSkillBuilder(persistence_adapter=persistence_adapter)
+# Initialize Skill Builder with Persistence if available
+if DYNAMODB_AVAILABLE:
+    try:
+        persistence_adapter = DynamoDbPersistenceAdapter(table_name="BlindfoldChessData")
+        sb = CustomSkillBuilder(persistence_adapter=persistence_adapter)
+        logger.info("Skill initialized with DynamoDB persistence.")
+    except Exception as e:
+        logger.warning(f"Failed to initialize DynamoDB adapter: {e}. Falling back to standard SkillBuilder.")
+        sb = SkillBuilder()
+else:
+    logger.warning("ask_sdk_dynamodb not found. Hearts will not be persistent across restarts.")
+    sb = SkillBuilder()
 
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(UserEventHandler())
