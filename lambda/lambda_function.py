@@ -303,6 +303,7 @@ def handle_switch_mode(handler_input, mode):
     """Common logic for switching between game modes (Matches, Puzzles, Squares)."""
     data = handler_input.attributes_manager.request_attributes["_"]
     attr = handler_input.attributes_manager.session_attributes
+    attr.pop("resuming", None) # Clear resumption flag when switching mode
     persistent_attr = handler_input.attributes_manager.persistent_attributes or {}
     
     if mode == "squares":
@@ -385,6 +386,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
         
         if mode in ["matches", "puzzles", "squares"]:
             # Resume existing session
+            attr["resuming"] = True
             speech_text = data.get("WELCOME_BACK", "Welcome back! You were playing {mode}. Should we continue?").format(mode=mode)
             
             if mode == "matches":
@@ -809,9 +811,40 @@ class YesIntentHandler(AbstractRequestHandler):
         return is_intent_name("AMAZON.YesIntent")(handler_input)
 
     def handle(self, handler_input):
+        data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
         mode = attr.get("mode")
+        resuming = attr.pop("resuming", False)
         
+        if resuming:
+            if mode == "squares":
+                current_square = attr.get("current_square")
+                speech_text = data["NEXT_SQUARE"].format(square=current_square)
+                # We need to set the start_time for the square timer
+                attr["start_time"] = time.time()
+                attr["squares_session_start_time"] = time.time()
+                
+                response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+                squares_param = ",".join([f"{k}:{v}" for k, v in attr.get("squares_history", {}).items()])
+                squares_info = {
+                    "boardUrl": get_board_image_url(highlight=current_square, squares=squares_param),
+                    "feedback": "",
+                    "isCorrect": True,
+                    "currentQuestion": current_square,
+                    "lives": handler_input.attributes_manager.persistent_attributes.get("lives", 5)
+                }
+                directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+                if directive:
+                    response_builder.add_directive(directive)
+                return response_builder.response
+                
+            if mode == "matches":
+                speech_text = data["YOUR_MOVE"]
+                return handler_input.response_builder.speak(speech_text).ask(speech_text).response
+                
+            if mode == "puzzles":
+                return PuzzleIntentHandler().handle(handler_input)
+
         if mode == "squares_summary":
             # Restart Squares mode
             return SwitchModeIntentHandler().handle(handler_input)
@@ -832,9 +865,11 @@ class NoIntentHandler(AbstractRequestHandler):
         data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
         mode = attr.get("mode", "matches")
+        resuming = attr.pop("resuming", False)
         
-        if mode == "squares_summary":
-            # Return to menu
+        if resuming or mode == "squares_summary":
+            # Return to menu instead of quitting
+            attr.clear()
             attr["mode"] = "none"
             speech_text = data["WELCOME_MSG"]
             response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
@@ -940,6 +975,14 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
             for key in persist_keys:
                 if key in persistent_attr:
                     attr[key] = persistent_attr[key]
+            
+            # Migration/Compatibility for Squares timing
+            if attr.get("mode") == "squares":
+                if "squares_accumulated_time" not in attr and "squares_start_timestamp" in attr:
+                    # Initialize accumulated time from old total if possible (though old total was just a timestamp)
+                    attr["squares_accumulated_time"] = 0 
+                if "squares_session_start_time" not in attr:
+                    attr["squares_session_start_time"] = time.time()
 
         # Daily reset logic
         today = datetime.utcnow().strftime('%Y-%m-%d')
