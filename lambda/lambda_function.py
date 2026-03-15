@@ -781,6 +781,19 @@ class UserEventHandler(AbstractRequestHandler):
             # This ensures the user hears confirmation of their tap
             return SwitchModeIntentHandler().handle(handler_input)
             
+        if arguments and arguments[0] == "goBack":
+            # Return to main menu
+            attr = handler_input.attributes_manager.session_attributes
+            attr["mode"] = "none"
+            
+            speech_text = data["WELCOME_MSG"]
+            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+            
+            directive = get_apl_directive(handler_input, type="menu")
+            if directive:
+                response_builder.add_directive(directive)
+            return response_builder.response
+            
         return handler_input.response_builder.response
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
