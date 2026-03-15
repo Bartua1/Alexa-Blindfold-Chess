@@ -1,32 +1,35 @@
 # -*- coding: utf-8 -*-
 
+import os
+
+# Set default AWS region for boto3 before other imports to avoid NoRegionError
+if "AWS_REGION" not in os.environ and "AWS_DEFAULT_REGION" not in os.environ:
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+
 import logging
-from ask_sdk_core.skill_builder import SkillBuilder
+import json
+import time
+from datetime import datetime
+import boto3
+from ask_sdk_core.skill_builder import SkillBuilder, CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExceptionHandler, AbstractRequestInterceptor, AbstractResponseInterceptor
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
-from ask_sdk_core.skill_builder import SkillBuilder, CustomSkillBuilder
-from ask_sdk_model import Response
-import boto3
 try:
     from ask_sdk_dynamodb.adapter import DynamoDbPersistenceAdapter
     DYNAMODB_AVAILABLE = True
 except ImportError:
     DYNAMODB_AVAILABLE = False
+from ask_sdk_model import Response
 from ask_sdk_model.interfaces.alexa.presentation.apl import RenderDocumentDirective
-import json
-import os
+
 import random
-import logging
 import language_strings
-import time
-from datetime import datetime
 from chess_engine.board_manager import BoardManager
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-import os
 
 # Get path to APL folder
 APL_PATH = os.path.join(os.path.dirname(__file__), "apl")
