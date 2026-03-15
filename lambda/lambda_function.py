@@ -279,6 +279,71 @@ def get_resolved_value(slot):
             
     return slot.value
 
+def handle_switch_mode(handler_input, mode):
+    """Common logic for switching between game modes (Matches, Puzzles, Squares)."""
+    data = handler_input.attributes_manager.request_attributes["_"]
+    attr = handler_input.attributes_manager.session_attributes
+    
+    if not mode or mode not in ["matches", "puzzles", "squares"]:
+        # Better clarification instead of just switching
+        speech_text = data.get("HELP_MSG", "You can play a Match, practice with Puzzles, or train your visualization with Squares. Which one?")
+        return handler_input.response_builder.speak(speech_text).ask(speech_text).response
+        
+    if mode != "squares":
+        attr.pop("current_square", None)
+
+    attr["mode"] = mode
+
+    if mode == "squares":
+        attr["squares_history"] = {}
+        attr["squares_correct_count"] = 0
+        attr["squares_start_timestamp"] = time.time()
+        
+        all_squares = [f"{f}{r}" for f in "abcdefgh" for r in "12345678"]
+        square = random.choice(all_squares)
+        attr["current_square"] = square
+        attr["start_time"] = time.time()
+        speech_text = data["SQUARES_MODE_START"].format(square=square)
+        
+        response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+        squares_info = {
+            "boardUrl": get_board_image_url(highlight=square), 
+            "feedback": "",
+            "isCorrect": True,
+            "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
+            "timeText": "",
+            "ratingNumber": 0
+        }
+        directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+        if directive:
+            response_builder.add_directive(directive)
+        return response_builder.response
+    
+    if mode == "puzzles":
+        # Just trigger puzzle logic
+        return PuzzleIntentHandler().handle(handler_input)
+        
+    if mode == "matches":
+        engine = BoardManager()
+        attr["board_fen"] = engine.get_fen()
+        attr["move_history"] = []
+    else:
+        engine = BoardManager(attr.get("board_fen"))
+        
+    mode_names = {
+        "matches": data.get("MENU_MATCHES", "Matches"),
+        "puzzles": data.get("MENU_PUZZLES", "Puzzles"),
+        "squares": data.get("MENU_SQUARES", "Squares")
+    }
+    display_mode = mode_names.get(mode, mode)
+    msg_template = data.get("MODE_SWITCHED", "Switched to {mode} mode.")
+    speech_text = msg_template.format(mode=display_mode)
+    response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
+    directive = get_apl_directive(handler_input, engine, "", type="matches")
+    if directive:
+        response_builder.add_directive(directive)
+    return response_builder.response
+
 class LaunchRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return is_request_type("LaunchRequest")(handler_input)
@@ -310,73 +375,11 @@ class SwitchModeIntentHandler(AbstractRequestHandler):
         return is_intent_name("SwitchModeIntent")(handler_input)
 
     def handle(self, handler_input):
-        data = handler_input.attributes_manager.request_attributes["_"]
-        attr = handler_input.attributes_manager.session_attributes
-        
         slot = handler_input.request_envelope.request.intent.slots.get("mode")
         mode = get_resolved_value(slot)
         
-        logger.info(f"SwitchModeIntent received. Slot value: {slot.value if slot else 'None'}, Resolved mode: {mode}")
-        
-        if not mode or mode not in ["matches", "puzzles", "squares"]:
-            # Better clarification instead of just switching
-            speech_text = data.get("HELP_MSG", "You can play a Match, practice with Puzzles, or train your visualization with Squares. Which one?")
-            return handler_input.response_builder.speak(speech_text).ask(speech_text).response
-            
-        if mode != "squares":
-            attr.pop("current_square", None)
-
-        attr["mode"] = mode
-
-        if mode == "squares":
-            attr["squares_history"] = {}
-            attr["squares_correct_count"] = 0
-            attr["squares_start_timestamp"] = time.time()
-            
-            all_squares = [f"{f}{r}" for f in "abcdefgh" for r in "12345678"]
-            square = random.choice(all_squares)
-            attr["current_square"] = square
-            attr["start_time"] = time.time()
-            speech_text = data["SQUARES_MODE_START"].format(square=square)
-            
-            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
-            squares_info = {
-                "boardUrl": get_board_image_url(highlight=square), 
-                "feedback": "",
-                "isCorrect": True,
-                "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
-                "timeText": "",
-                "ratingNumber": 0
-            }
-            directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
-            if directive:
-                response_builder.add_directive(directive)
-            return response_builder.response
-        
-        if mode == "puzzles":
-            # Just trigger puzzle logic
-            return PuzzleIntentHandler().handle(handler_input)
-            
-        if mode == "matches":
-            engine = BoardManager()
-            attr["board_fen"] = engine.get_fen()
-            attr["move_history"] = []
-        else:
-            engine = BoardManager(attr.get("board_fen"))
-            
-        mode_names = {
-            "matches": data.get("MENU_MATCHES", "Matches"),
-            "puzzles": data.get("MENU_PUZZLES", "Puzzles"),
-            "squares": data.get("MENU_SQUARES", "Squares")
-        }
-        display_mode = mode_names.get(mode, mode)
-        msg_template = data.get("MODE_SWITCHED", "Switched to {mode} mode.")
-        speech_text = msg_template.format(mode=display_mode)
-        response_builder = handler_input.response_builder.speak(speech_text).ask(data["YOUR_MOVE"])
-        directive = get_apl_directive(handler_input, engine, "", type="matches")
-        if directive:
-            response_builder.add_directive(directive)
-        return response_builder.response
+        logger.info(f"SwitchModeIntent handler. Slot: {slot.value if slot else 'None'}, Resolved: {mode}")
+        return handle_switch_mode(handler_input, mode)
 
 class MoveIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
@@ -768,18 +771,8 @@ class UserEventHandler(AbstractRequestHandler):
         
         if arguments and arguments[0] == "SwitchModeIntent":
             mode = arguments[1]
-            
-            # Update session attributes
-            attr = handler_input.attributes_manager.session_attributes
-            attr["mode"] = mode
-            
-            # Map mode to localized display name for feedback
-            mode_name_key = f"MENU_{mode.upper()}"
-            mode_name = data.get(mode_name_key, mode)
-            
-            # Immediately trigger the mode switch response
-            # This ensures the user hears confirmation of their tap
-            return SwitchModeIntentHandler().handle(handler_input)
+            logger.info(f"UserEvent SwitchModeIntent: {mode}")
+            return handle_switch_mode(handler_input, mode)
             
         if arguments and arguments[0] == "goBack":
             # Return to main menu

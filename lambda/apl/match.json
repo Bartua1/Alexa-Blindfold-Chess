@@ -32,6 +32,14 @@
                         "headerSubtitle": "${matchData.subtitle}",
                         "headerAttributionImage": "${matchData.logoUrl}",
                         "headerBackButton": true,
+                        "onHeaderBackButton": [
+                            {
+                                "type": "SendEvent",
+                                "arguments": [
+                                    "goBack"
+                                ]
+                            }
+                        ],
                         "theme": "light"
                     },
                     {

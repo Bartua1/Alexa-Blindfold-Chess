@@ -21,6 +21,14 @@
                 "headerTitle": "${puzzleData.title}",
                 "headerSubtitle": "${puzzleData.feedback}",
                 "headerBackButton": true,
+                "onHeaderBackButton": [
+                    {
+                        "type": "SendEvent",
+                        "arguments": [
+                            "goBack"
+                        ]
+                    }
+                ],
                 "headerAttributionImage": "${puzzleData.logoUrl}",
                 "imageBlurredBackground": false,
                 "imageScale": "best-fit",

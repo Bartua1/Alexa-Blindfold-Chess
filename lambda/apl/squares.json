@@ -21,6 +21,14 @@
                 "headerTitle": "${squaresData.title}",
                 "headerSubtitle": "${squaresData.feedback}",
                 "headerBackButton": true,
+                "onHeaderBackButton": [
+                    {
+                        "type": "SendEvent",
+                        "arguments": [
+                            "goBack"
+                        ]
+                    }
+                ],
                 "headerAttributionImage": "${squaresData.logoUrl}",
                 "imageBlurredBackground": false,
                 "imageScale": "best-fit",
