@@ -19,7 +19,7 @@
                 "detailType": "location",
                 "detailImageAlignment": "left",
                 "headerTitle": "${squaresData.title}",
-                "headerSubtitle": "${squaresData.feedback}${squaresData.feedback != '' ? ' | ' : ''}${squaresData.lives == 5 ? '❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥' : squaresData.lives == 4 ? '❤️‍🔥❤️‍🔥❤️‍🔥❤️‍🔥' : squaresData.lives == 3 ? '❤️‍🔥❤️‍🔥❤️‍🔥' : squaresData.lives == 2 ? '❤️‍🔥❤️‍🔥' : squaresData.lives == 1 ? '❤️‍🔥' : '🖤'}",
+                "headerSubtitle": "${squaresData.lives >= 5 ? '❤️❤️❤️❤️❤️' : squaresData.lives == 4 ? '❤️❤️❤️❤️🖤' : squaresData.lives == 3 ? '❤️❤️❤️🖤🖤' : squaresData.lives == 2 ? '❤️❤️🖤🖤🖤' : squaresData.lives == 1 ? '❤️🖤🖤🖤🖤' : '🖤🖤🖤🖤🖤'}${squaresData.feedback != '' ? ' | ' : ''}${squaresData.feedback}",
                 "headerBackButton": true,
                 "onHeaderBackButton": [
                     {
