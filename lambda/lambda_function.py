@@ -324,7 +324,8 @@ def handle_switch_mode(handler_input, mode):
     if mode == "squares":
         attr["squares_history"] = {}
         attr["squares_correct_count"] = 0
-        attr["squares_start_timestamp"] = time.time()
+        attr["squares_accumulated_time"] = 0
+        attr["squares_session_start_time"] = time.time()
         
         all_squares = [f"{f}{r}" for f in "abcdefgh" for r in "12345678"]
         square = random.choice(all_squares)
@@ -378,16 +379,45 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         data = handler_input.attributes_manager.request_attributes["_"]
-        
-        # Initialize session state
         attr = handler_input.attributes_manager.session_attributes
-        attr["mode"] = "matches"
         
-        # Initialize board for Matches mode
-        engine = BoardManager()
-        attr["board_fen"] = engine.get_fen()
-        attr["move_history"] = []
+        mode = attr.get("mode")
         
+        if mode in ["matches", "puzzles", "squares"]:
+            # Resume existing session
+            speech_text = data.get("WELCOME_BACK", "Welcome back! You were playing {mode}. Should we continue?").format(mode=mode)
+            
+            if mode == "matches":
+                fen = attr.get("board_fen", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                engine = BoardManager(fen)
+                directive = get_apl_directive(handler_input, engine, "Welcome back!", type="matches")
+            elif mode == "squares":
+                current_square = attr.get("current_square")
+                squares_param = ",".join([f"{k}:{v}" for k, v in attr.get("squares_history", {}).items()])
+                squares_info = {
+                    "boardUrl": get_board_image_url(highlight=current_square, squares=squares_param),
+                    "feedback": "",
+                    "isCorrect": True,
+                    "currentQuestion": current_square,
+                    "lives": handler_input.attributes_manager.persistent_attributes.get("lives", 5)
+                }
+                directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+            else: # puzzles
+                puzzle_info = {
+                    "fen": attr.get("board_fen"),
+                    "description": attr.get("puzzle_description", ""),
+                    "feedback": "",
+                    "subtitle": data["SOLVE_PUZZLE"]
+                }
+                directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
+                
+            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+            if directive:
+                response_builder.add_directive(directive)
+            return response_builder.response
+
+        # Default new session
+        attr["mode"] = "none"
         speech_text = data["WELCOME_MSG"]
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
@@ -548,7 +578,12 @@ class SquareColorIntentHandler(AbstractRequestHandler):
                 arrow = "↓"
             elif elapsed_time > last_time:
                 arrow = "↑"
+
+        # Update accumulated time
+        attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + elapsed_time
+        attr["squares_session_start_time"] = now # Reset session start for next square
         attr["last_time"] = elapsed_time
+        # attr["start_time"] is still used for individual square timing
         attr["start_time"] = now
 
         # Convert history to string for server
@@ -567,7 +602,10 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         
         if not remaining:
             # Completion!
-            total_time_seconds = int(now - attr.get("squares_start_timestamp", now))
+            # Add session time to accumulated time
+            session_duration = round(now - attr.get("squares_session_start_time", now), 1)
+            total_time_seconds = int(attr.get("squares_accumulated_time", 0) + session_duration)
+            
             minutes = total_time_seconds // 60
             seconds = total_time_seconds % 60
             time_str = f"{minutes}m {seconds}s" if minutes > 0 else f"{seconds}s"
@@ -736,6 +774,13 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
         attr = handler_input.attributes_manager.session_attributes
         mode = attr.get("mode", "matches")
         
+        # Finalize accumulated time if in squares mode
+        if mode == "squares" and "squares_session_start_time" in attr:
+            now = time.time()
+            session_duration = round(now - attr["squares_session_start_time"], 1)
+            attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + session_duration
+            attr.pop("squares_session_start_time") # Clear to avoid double counting
+
         speech_key = f"GOODBYE_{mode.upper()}"
         speech_text = data.get(speech_key, data["GOODBYE_MSG"])
             
@@ -837,6 +882,12 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
         return is_request_type("SessionEndedRequest")(handler_input)
 
     def handle(self, handler_input):
+        attr = handler_input.attributes_manager.session_attributes
+        if attr.get("mode") == "squares" and "squares_session_start_time" in attr:
+            now = time.time()
+            session_duration = round(now - attr["squares_session_start_time"], 1)
+            attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + session_duration
+
         return handler_input.response_builder.response
 
 class CatchAllExceptionHandler(AbstractExceptionHandler):
@@ -868,14 +919,27 @@ class LocalizationInterceptor(AbstractRequestInterceptor):
 
 class LoadPersistenceInterceptor(AbstractRequestInterceptor):
     def process(self, handler_input):
+        persistent_attr = {}
         try:
             persistent_attr = handler_input.attributes_manager.persistent_attributes
-        except Exception:
-            persistent_attr = None
+        except Exception as e:
+            logger.warning(f"Failed to load persistent attributes: {e}")
             
         if persistent_attr is None:
             persistent_attr = {}
             handler_input.attributes_manager.persistent_attributes = persistent_attr
+
+        # Synchronize back to session attributes IF this is a new session
+        if is_request_type("LaunchRequest")(handler_input) or not handler_input.attributes_manager.session_attributes:
+            attr = handler_input.attributes_manager.session_attributes
+            persist_keys = [
+                "mode", "board_fen", "move_history", 
+                "squares_history", "squares_correct_count", "squares_accumulated_time", "current_square",
+                "puzzle_id", "puzzle_solved", "puzzle_description", "puzzle_solution"
+            ]
+            for key in persist_keys:
+                if key in persistent_attr:
+                    attr[key] = persistent_attr[key]
 
         # Daily reset logic
         today = datetime.utcnow().strftime('%Y-%m-%d')
@@ -891,10 +955,27 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
 
 class SavePersistenceInterceptor(AbstractResponseInterceptor):
     def process(self, handler_input, response):
+        attr = handler_input.attributes_manager.session_attributes
+        persistent_attr = handler_input.attributes_manager.persistent_attributes
+        
+        if persistent_attr is None:
+            persistent_attr = {}
+            handler_input.attributes_manager.persistent_attributes = persistent_attr
+
+        # Synchronize session attributes to persistent attributes
+        persist_keys = [
+            "mode", "board_fen", "move_history", 
+            "squares_history", "squares_correct_count", "squares_accumulated_time", "current_square",
+            "puzzle_id", "puzzle_solved", "puzzle_description", "puzzle_solution"
+        ]
+        for key in persist_keys:
+            if key in attr:
+                persistent_attr[key] = attr[key]
+        
         try:
             handler_input.attributes_manager.save_persistent_attributes()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to save persistent attributes: {e}")
 
 # Initialize Skill Builder with Persistence if available
 if DYNAMODB_AVAILABLE:
