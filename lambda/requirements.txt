@@ -3,4 +3,5 @@ python-chess
 flask
 Pillow
 ask-sdk-dynamodb-persistence-adapter
+python-dotenv
 

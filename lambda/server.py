@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 import logging
 import traceback
 from flask import Flask, request, jsonify, Response

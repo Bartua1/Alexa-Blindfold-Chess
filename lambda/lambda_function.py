@@ -1,6 +1,13 @@
-# -*- coding: utf-8 -*-
-
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Set default AWS region for boto3 before other imports to avoid NoRegionError
+if "AWS_REGION" not in os.environ and "AWS_DEFAULT_REGION" not in os.environ:
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+    os.environ["AWS_REGION"] = "us-east-1"
 
 import logging
 import json
@@ -8,10 +15,9 @@ import time
 from datetime import datetime
 import boto3
 
-# Set default AWS region for boto3 before other imports to avoid NoRegionError
-if "AWS_REGION" not in os.environ and "AWS_DEFAULT_REGION" not in os.environ:
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-    os.environ["AWS_REGION"] = "us-east-1"
+# Set up logging early
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Explicitly setup boto3 session to ensure region is picked up
 boto3.setup_default_session(region_name=os.environ.get("AWS_REGION", os.environ.get("AWS_DEFAULT_REGION")))
@@ -20,9 +26,10 @@ from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExc
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 try:
-    from ask_sdk_dynamodb.adapter import DynamoDbPersistenceAdapter
+    from ask_sdk_dynamodb.adapter import DynamoDbAdapter
     DYNAMODB_AVAILABLE = True
-except ImportError:
+except Exception as e:
+    logger.warning(f"Could not import DynamoDbAdapter: {e}")
     DYNAMODB_AVAILABLE = False
 from ask_sdk_model import Response
 from ask_sdk_model.interfaces.alexa.presentation.apl import RenderDocumentDirective
@@ -30,9 +37,6 @@ from ask_sdk_model.interfaces.alexa.presentation.apl import RenderDocumentDirect
 import random
 import language_strings
 from chess_engine.board_manager import BoardManager
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 # Get path to APL folder
@@ -897,7 +901,7 @@ if DYNAMODB_AVAILABLE:
     try:
         region = os.environ.get("AWS_REGION", "us-east-1")
         dynamodb_resource = boto3.resource("dynamodb", region_name=region)
-        persistence_adapter = DynamoDbPersistenceAdapter(table_name="BlindfoldChessData", dynamodb_resource=dynamodb_resource)
+        persistence_adapter = DynamoDbAdapter(table_name="BlindfoldChessData", dynamodb_resource=dynamodb_resource, create_table=True)
         sb = CustomSkillBuilder(persistence_adapter=persistence_adapter)
         logger.info(f"Skill initialized with DynamoDB persistence in region {region}.")
     except Exception as e:
