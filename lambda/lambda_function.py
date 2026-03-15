@@ -402,7 +402,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
                     "feedback": "",
                     "isCorrect": True,
                     "currentQuestion": current_square,
-                    "lives": handler_input.attributes_manager.persistent_attributes.get("lives", 5)
+                    "lives": attr.get("lives", 5)
                 }
                 directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
             else: # puzzles
@@ -565,11 +565,10 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         if is_correct:
             attr["squares_correct_count"] = attr.get("squares_correct_count", 0) + 1
         else:
-            # Handle lives
-            lives = persistent_attr.get("lives", 5)
+            # Handle lives in session attributes
+            lives = attr.get("lives", 5)
             lives -= 1
-            persistent_attr["lives"] = max(0, lives)
-            handler_input.attributes_manager.save_persistent_attributes()
+            attr["lives"] = max(0, lives)
 
         # Calculate time taken for THIS square
         now = time.time()
@@ -672,7 +671,7 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
             "timeText": time_text,
             "ratingNumber": rating_number,
-            "lives": persistent_attr.get("lives", 5)
+            "lives": attr.get("lives", 5)
         }
         
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
@@ -832,7 +831,7 @@ class YesIntentHandler(AbstractRequestHandler):
                     "feedback": "",
                     "isCorrect": True,
                     "currentQuestion": current_square,
-                    "lives": handler_input.attributes_manager.persistent_attributes.get("lives", 5)
+                    "lives": attr.get("lives", 5)
                 }
                 directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
                 if directive:
@@ -972,7 +971,20 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
             persistent_attr = {}
             handler_input.attributes_manager.persistent_attributes = persistent_attr
 
-        # Synchronize back to session attributes IF this is a new session
+        # 1. Daily reset logic FIRST
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        last_reset = persistent_attr.get("last_reset_date")
+        
+        if last_reset != today:
+            persistent_attr["lives"] = 5
+            persistent_attr["last_reset_date"] = today
+            logger.info(f"Daily reset: Lives reset to 5 for {today}")
+            try:
+                handler_input.attributes_manager.save_persistent_attributes()
+            except Exception:
+                logger.warning("Failed to save persistent attributes during reset")
+
+        # 2. Synchronize back to session attributes IF this is a new session
         if is_request_type("LaunchRequest")(handler_input) or not handler_input.attributes_manager.session_attributes:
             attr = handler_input.attributes_manager.session_attributes
             persist_keys = [
@@ -983,6 +995,9 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
             for key in persist_keys:
                 if key in persistent_attr:
                     attr[key] = persistent_attr[key]
+                elif key == "lives":
+                    # Fallback for new users
+                    attr["lives"] = 5
             
             logger.info(f"Loaded persistent attributes into session: {attr}")
             
@@ -993,18 +1008,6 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
                     attr["squares_accumulated_time"] = 0 
                 if "squares_session_start_time" not in attr:
                     attr["squares_session_start_time"] = time.time()
-
-        # Daily reset logic
-        today = datetime.utcnow().strftime('%Y-%m-%d')
-        last_reset = persistent_attr.get("last_reset_date")
-        
-        if last_reset != today:
-            persistent_attr["lives"] = 5
-            persistent_attr["last_reset_date"] = today
-            try:
-                handler_input.attributes_manager.save_persistent_attributes()
-            except Exception:
-                logger.warning("Failed to save persistent attributes (persistence may not be configured)")
 
 class SavePersistenceInterceptor(AbstractResponseInterceptor):
     def process(self, handler_input, response):
