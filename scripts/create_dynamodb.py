@@ -1,5 +1,11 @@
 import boto3
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file in the root directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir)
+load_dotenv(os.path.join(root_dir, ".env"))
 
 def create_table():
     # Use environment variable or default to us-east-1
