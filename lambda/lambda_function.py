@@ -2,9 +2,11 @@
 
 import logging
 from ask_sdk_core.skill_builder import SkillBuilder
-from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExceptionHandler, AbstractRequestInterceptor
+from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExceptionHandler, AbstractRequestInterceptor, AbstractResponseInterceptor
 from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
+from ask_sdk_core.skill_builder import CustomSkillBuilder
+from ask_sdk_dynamodb.adapter import DynamoDbPersistenceAdapter
 from ask_sdk_model import Response
 from ask_sdk_model.interfaces.alexa.presentation.apl import RenderDocumentDirective
 import json
@@ -13,6 +15,7 @@ import random
 import logging
 import language_strings
 import time
+from datetime import datetime
 from chess_engine.board_manager import BoardManager
 
 logger = logging.getLogger(__name__)
@@ -100,7 +103,8 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                             "boardUrl": squares_data.get("boardUrl", get_board_image_url()),
                             "currentQuestion": squares_data.get("currentQuestion", ""),
                             "timeText": squares_data.get("timeText", ""),
-                            "ratingNumber": squares_data.get("ratingNumber", 0)
+                            "ratingNumber": squares_data.get("ratingNumber", 0),
+                            "lives": squares_data.get("lives", 5)
                         }
                     }
                 )
@@ -283,7 +287,14 @@ def handle_switch_mode(handler_input, mode):
     """Common logic for switching between game modes (Matches, Puzzles, Squares)."""
     data = handler_input.attributes_manager.request_attributes["_"]
     attr = handler_input.attributes_manager.session_attributes
+    persistent_attr = handler_input.attributes_manager.persistent_attributes
     
+    if mode == "squares":
+        lives = persistent_attr.get("lives", 5)
+        if lives <= 0:
+            speech_text = data["OUT_OF_LIVES_MSG"]
+            return handler_input.response_builder.speak(speech_text).response
+
     if not mode or mode not in ["matches", "puzzles", "squares"]:
         # Better clarification instead of just switching
         speech_text = data.get("HELP_MSG", "You can play a Match, practice with Puzzles, or train your visualization with Squares. Which one?")
@@ -312,7 +323,8 @@ def handle_switch_mode(handler_input, mode):
             "isCorrect": True,
             "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
             "timeText": "",
-            "ratingNumber": 0
+            "ratingNumber": 0,
+            "lives": persistent_attr.get("lives", 5)
         }
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
         if directive:
@@ -489,6 +501,7 @@ class SquareColorIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         data = handler_input.attributes_manager.request_attributes["_"]
         attr = handler_input.attributes_manager.session_attributes
+        persistent_attr = handler_input.attributes_manager.persistent_attributes
         
         user_color = get_resolved_value(handler_input.request_envelope.request.intent.slots["color"])
         current_square = attr.get("current_square")
@@ -502,6 +515,12 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         attr["squares_history"] = history
         if is_correct:
             attr["squares_correct_count"] = attr.get("squares_correct_count", 0) + 1
+        else:
+            # Handle lives
+            lives = persistent_attr.get("lives", 5)
+            lives -= 1
+            persistent_attr["lives"] = max(0, lives)
+            handler_input.attributes_manager.save_persistent_attributes()
 
         # Calculate time taken for THIS square
         now = time.time()
@@ -567,18 +586,25 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         new_square = random.choice(remaining)
         attr["current_square"] = new_square
         
-        feedback_msg = data['CORRECT_ANSWER'] if is_correct else data['WRONG_ANSWER']
-        speech_text = f"{feedback_msg} {data['NEXT_SQUARE'].format(square=new_square)}"
-        feedback_text = f"<font color='{color_green if is_correct else color_red}'>{feedback_msg}</font>"
-        
-        # Rating logic for correct answers
         if is_correct:
             if elapsed_time < 10:
                 rating_number = 5
             else:
                 rating_number = max(0, 5.0 - ((elapsed_time - 10) // 5 + 1) * 0.5)
+            feedback_msg = data['CORRECT_ANSWER']
+            speech_text = f"{feedback_msg} {data['NEXT_SQUARE'].format(square=new_square)}"
         else:
             rating_number = 0
+            lives = persistent_attr.get("lives", 0)
+            feedback_msg = data['WRONG_ANSWER']
+            if lives > 0:
+                speech_text = f"{feedback_msg} {data['LIVES_REMAINING'].format(lives=lives)} {data['NEXT_SQUARE'].format(square=new_square)}"
+            else:
+                speech_text = f"{feedback_msg} {data['OUT_OF_LIVES_MSG']}"
+                # If out of lives, end the session or transition
+                return handler_input.response_builder.speak(speech_text).response
+            
+        feedback_text = f"<font color='{color_green if is_correct else color_red}'>{feedback_msg}</font>"
             
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
         
@@ -588,7 +614,8 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             "isCorrect": is_correct,
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
             "timeText": time_text,
-            "ratingNumber": rating_number
+            "ratingNumber": rating_number,
+            "lives": persistent_attr.get("lives", 5)
         }
         
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
@@ -811,19 +838,31 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
                 .response
         )
 
-class LocalizationInterceptor(AbstractRequestInterceptor):
-    def process(self, handler_input):
-        locale = handler_input.request_envelope.request.locale
-        logger.info(f"Locale: {locale}")
-        
-        # Simplified localization: match prefix (e.g., 'en-US' -> 'en')
-        lang = locale.split('-')[0]
-        if lang not in language_strings.data:
-            lang = 'en' # Default
-            
         handler_input.attributes_manager.request_attributes["_"] = language_strings.data[lang]["translation"]
 
-sb = SkillBuilder()
+class LoadPersistenceInterceptor(AbstractRequestInterceptor):
+    def process(self, handler_input):
+        persistent_attr = handler_input.attributes_manager.persistent_attributes
+        if not persistent_attr:
+            persistent_attr = {}
+            handler_input.attributes_manager.persistent_attributes = persistent_attr
+
+        # Daily reset logic
+        today = datetime.utcnow().strftime('%Y-%m-%d')
+        last_reset = persistent_attr.get("last_reset_date")
+        
+        if last_reset != today:
+            persistent_attr["lives"] = 5
+            persistent_attr["last_reset_date"] = today
+            handler_input.attributes_manager.save_persistent_attributes()
+
+class SavePersistenceInterceptor(AbstractResponseInterceptor):
+    def process(self, handler_input, response):
+        handler_input.attributes_manager.save_persistent_attributes()
+
+# Initialize Skill Builder with Persistence
+persistence_adapter = DynamoDbPersistenceAdapter(table_name="BlindfoldChessData")
+sb = CustomSkillBuilder(persistence_adapter=persistence_adapter)
 
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(UserEventHandler())
@@ -838,8 +877,8 @@ sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
 
-sb.add_exception_handler(CatchAllExceptionHandler())
-
 sb.add_global_request_interceptor(LocalizationInterceptor())
+sb.add_global_request_interceptor(LoadPersistenceInterceptor())
+sb.add_global_response_interceptor(SavePersistenceInterceptor())
 
 lambda_handler = sb.lambda_handler()

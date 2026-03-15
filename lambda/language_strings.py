@@ -24,6 +24,9 @@ data = {
             "SQUARES_COMPLETED": "Congratulations! You have completed the board.",
             "SQUARES_SUMMARY": "Total time: {time}. Accuracy: {accuracy}%. Would you like to play again?",
             "SQUARES_SUMMARY_TITLE": "Squares - Summary",
+            "OUT_OF_LIVES_MSG": "You are out of lives for today. Come back tomorrow for more!",
+            "LIVES_REMAINING": "You have {lives} hearts left.",
+            "WRONG_ANSWER_LIVES": "That's not correct. You have {lives} hearts left.",
             "BOARD_DESCRIPTION": "The board status is: White pieces: {white_pieces}. Black pieces: {black_pieces}.",
             "PIECE_POSITION": "{piece} at {square}",
             "PIECES": {
@@ -82,6 +85,9 @@ data = {
             "SQUARES_COMPLETED": "¡Enhorabuena! Has completado todo el tablero.",
             "SQUARES_SUMMARY": "Tiempo total: {time}. Precisión: {accuracy}%. ¿Quieres jugar de nuevo?",
             "SQUARES_SUMMARY_TITLE": "Visualización - Resumen",
+            "OUT_OF_LIVES_MSG": "Se te han acabado las vidas por hoy. ¡Vuelve mañana para más!",
+            "LIVES_REMAINING": "Te quedan {lives} vidas.",
+            "WRONG_ANSWER_LIVES": "Eso no es correcto. Te quedan {lives} vidas.",
             "BOARD_DESCRIPTION": "El estado del tablero es: Piezas blancas: {white_pieces}. Piezas negras: {black_pieces}.",
             "PIECE_POSITION": "{piece} en {square}",
             "PIECES": {
