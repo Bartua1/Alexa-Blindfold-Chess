@@ -70,6 +70,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
         # Strict check: ensure the alexa_presentation_apl interface is present
         if interfaces.alexa_presentation_apl is not None:
             if type == "menu":
+                path = os.path.join(APL_PATH, "menu.json")
                 with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 return RenderDocumentDirective(
@@ -103,6 +104,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 )
             
             if type == "squares":
+                path = os.path.join(APL_PATH, "squares.json")
                 with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 
@@ -125,6 +127,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 )
             
             if type == "puzzles":
+                path = os.path.join(APL_PATH, "puzzles.json")
                 with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 
@@ -145,6 +148,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 )
             
             if type == "matches":
+                path = os.path.join(APL_PATH, "match.json")
                 with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 
@@ -706,6 +710,8 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             lives = persistent_attr.get("lives", Decimal('0'))
             feedback_msg = data['WRONG_ANSWER']
             if lives > 0:
+                lives -= 1
+                attr["lives"] = lives
                 speech_text = f"{feedback_msg} {data['LIVES_REMAINING'].format(lives=lives)} {data['NEXT_SQUARE'].format(square=new_square)}"
             else:
                 speech_text = f"{feedback_msg} {data['OUT_OF_LIVES_MSG']}"
