@@ -7,6 +7,7 @@ from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_core.skill_builder import SkillBuilder, CustomSkillBuilder
 from ask_sdk_model import Response
+import boto3
 try:
     from ask_sdk_dynamodb.adapter import DynamoDbPersistenceAdapter
     DYNAMODB_AVAILABLE = True
@@ -877,9 +878,11 @@ class SavePersistenceInterceptor(AbstractResponseInterceptor):
 # Initialize Skill Builder with Persistence if available
 if DYNAMODB_AVAILABLE:
     try:
-        persistence_adapter = DynamoDbPersistenceAdapter(table_name="BlindfoldChessData")
+        region = os.environ.get("AWS_REGION", "us-east-1")
+        dynamodb_resource = boto3.resource("dynamodb", region_name=region)
+        persistence_adapter = DynamoDbPersistenceAdapter(table_name="BlindfoldChessData", dynamodb_resource=dynamodb_resource)
         sb = CustomSkillBuilder(persistence_adapter=persistence_adapter)
-        logger.info("Skill initialized with DynamoDB persistence.")
+        logger.info(f"Skill initialized with DynamoDB persistence in region {region}.")
     except Exception as e:
         logger.warning(f"Failed to initialize DynamoDB adapter: {e}. Falling back to standard SkillBuilder.")
         sb = SkillBuilder()
