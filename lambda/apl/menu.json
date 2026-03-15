@@ -33,7 +33,7 @@
             "type": "SendEvent",
             "arguments": [
               "SwitchModeIntent",
-              "${event.source.value}"
+              "${data.value}"
             ]
           }
         ]
