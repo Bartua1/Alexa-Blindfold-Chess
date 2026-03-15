@@ -2,15 +2,19 @@
 
 import os
 
-# Set default AWS region for boto3 before other imports to avoid NoRegionError
-if "AWS_REGION" not in os.environ and "AWS_DEFAULT_REGION" not in os.environ:
-    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-
 import logging
 import json
 import time
 from datetime import datetime
 import boto3
+
+# Set default AWS region for boto3 before other imports to avoid NoRegionError
+if "AWS_REGION" not in os.environ and "AWS_DEFAULT_REGION" not in os.environ:
+    os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+    os.environ["AWS_REGION"] = "us-east-1"
+
+# Explicitly setup boto3 session to ensure region is picked up
+boto3.setup_default_session(region_name=os.environ.get("AWS_REGION", os.environ.get("AWS_DEFAULT_REGION")))
 from ask_sdk_core.skill_builder import SkillBuilder, CustomSkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExceptionHandler, AbstractRequestInterceptor, AbstractResponseInterceptor
 from ask_sdk_core.utils import is_request_type, is_intent_name
@@ -846,6 +850,16 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
                 .response
         )
 
+        handler_input.attributes_manager.request_attributes["_"] = language_strings.data[lang]["translation"]
+
+class LocalizationInterceptor(AbstractRequestInterceptor):
+    def process(self, handler_input):
+        locale = handler_input.request_envelope.request.locale
+        lang = locale[:2] if locale else "en"
+        
+        if lang not in language_strings.data:
+            lang = "en"
+            
         handler_input.attributes_manager.request_attributes["_"] = language_strings.data[lang]["translation"]
 
 class LoadPersistenceInterceptor(AbstractRequestInterceptor):
