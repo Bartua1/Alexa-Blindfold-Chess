@@ -14,6 +14,7 @@ import json
 import time
 from datetime import datetime
 import boto3
+from decimal import Decimal
 
 # Set up logging early
 logger = logging.getLogger(__name__)
@@ -69,8 +70,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
         # Strict check: ensure the alexa_presentation_apl interface is present
         if interfaces.alexa_presentation_apl is not None:
             if type == "menu":
-                path = os.path.join(APL_PATH, "menu.json")
-                with open(path) as f:
+                with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 return RenderDocumentDirective(
                     document=apl_doc,
@@ -103,8 +103,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 )
             
             if type == "squares":
-                path = os.path.join(APL_PATH, "squares.json")
-                with open(path) as f:
+                with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 
                 squares_data = engine if isinstance(engine, dict) else {}
@@ -126,8 +125,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 )
             
             if type == "puzzles":
-                path = os.path.join(APL_PATH, "puzzles.json")
-                with open(path) as f:
+                with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 
                 puzzle_data = engine if isinstance(engine, dict) else {}
@@ -147,8 +145,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
                 )
             
             if type == "matches":
-                path = os.path.join(APL_PATH, "match.json")
-                with open(path) as f:
+                with open(path, encoding='utf-8') as f:
                     apl_doc = json.load(f)
                 
                 fen = engine.get_fen() if engine else "8/8/8/8/8/8/8/8"
@@ -176,7 +173,7 @@ def get_apl_directive(handler_input, engine=None, last_move="Welcome!", type="bo
             
             # Default to board (old standard view)
             path = os.path.join(APL_PATH, "chessboard.json")
-            with open(path) as f:
+            with open(path, encoding='utf-8') as f:
                 apl_doc = json.load(f)
             
             fen = engine.get_fen() if engine else "8/8/8/8/8/8/8/8"
@@ -259,7 +256,7 @@ def get_puzzles():
     path = os.path.join(script_dir, "puzzles.json")
     
     if os.path.exists(path):
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             return json.load(f)
             
     raise FileNotFoundError(f"puzzles.json not found at: {path}")
@@ -307,7 +304,40 @@ def handle_switch_mode(handler_input, mode):
     persistent_attr = handler_input.attributes_manager.persistent_attributes or {}
     
     if mode == "squares":
-        lives = persistent_attr.get("lives", 5)
+        # Check if we should resume or start fresh
+        if attr.get("mode") == "squares" and attr.get("squares_history"):
+            # We are already in squares and have progress, just stay here
+            # or if we were in none but have squares_history in session
+            pass
+        elif persistent_attr.get("mode") == "squares" and persistent_attr.get("squares_history"):
+            # Resume from persistent
+            attr.update({k: persistent_attr[k] for k in [
+                "squares_history", "squares_correct_count", "squares_accumulated_time", 
+                "current_square", "lives"
+            ] if k in persistent_attr})
+            attr["mode"] = "squares"
+            attr["start_time"] = time.time()
+            attr["squares_session_start_time"] = time.time()
+            
+            current_square = attr.get("current_square")
+            speech_text = data["NEXT_SQUARE"].format(square=current_square)
+            
+            response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
+            squares_param = ",".join([f"{k}:{v}" for k, v in attr.get("squares_history", {}).items()])
+            squares_info = {
+                "boardUrl": get_board_image_url(highlight=current_square, squares=squares_param),
+                "feedback": "",
+                "isCorrect": True,
+                "currentQuestion": current_square,
+                "lives": int(attr.get("lives", 5))
+            }
+            directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+            if directive:
+                response_builder.add_directive(directive)
+            return response_builder.response
+
+        # fresh start
+        lives = persistent_attr.get("lives", Decimal('5'))
         if lives <= 0:
             speech_text = data["OUT_OF_LIVES_MSG"]
             return handler_input.response_builder.speak(speech_text).response
@@ -325,13 +355,13 @@ def handle_switch_mode(handler_input, mode):
     if mode == "squares":
         attr["squares_history"] = {}
         attr["squares_correct_count"] = 0
-        attr["squares_accumulated_time"] = 0
-        attr["squares_session_start_time"] = time.time()
+        attr["squares_accumulated_time"] = Decimal('0')
+        attr["squares_session_start_time"] = Decimal(str(time.time()))
         
         all_squares = [f"{f}{r}" for f in "abcdefgh" for r in "12345678"]
         square = random.choice(all_squares)
         attr["current_square"] = square
-        attr["start_time"] = time.time()
+        attr["start_time"] = Decimal(str(time.time()))
         speech_text = data["SQUARES_MODE_START"].format(square=square)
         
         response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
@@ -342,7 +372,7 @@ def handle_switch_mode(handler_input, mode):
             "currentQuestion": data["SQUARES_MODE_START"].format(square=square).split('?')[-1].strip() or square,
             "timeText": "",
             "ratingNumber": 0,
-            "lives": persistent_attr.get("lives", 5)
+            "lives": int(persistent_attr.get("lives", 5))
         }
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
         if directive:
@@ -388,12 +418,11 @@ class LaunchRequestHandler(AbstractRequestHandler):
             # Resume existing session
             attr["resuming"] = True
             logger.info(f"Resuming session. Mode: {mode}, Attr: {attr}")
-            speech_text = data.get("WELCOME_BACK", "Welcome back! You were playing {mode}. Should we continue?").format(mode=mode)
-            
             if mode == "matches":
                 fen = attr.get("board_fen", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
                 engine = BoardManager(fen)
                 directive = get_apl_directive(handler_input, engine, "Welcome back!", type="matches")
+                speech_text = data.get("WELCOME_BACK", "Welcome back! You were playing {mode}. Should we continue?").format(mode=mode)
             elif mode == "squares":
                 current_square = attr.get("current_square")
                 squares_param = ",".join([f"{k}:{v}" for k, v in attr.get("squares_history", {}).items()])
@@ -402,9 +431,11 @@ class LaunchRequestHandler(AbstractRequestHandler):
                     "feedback": "",
                     "isCorrect": True,
                     "currentQuestion": current_square,
-                    "lives": attr.get("lives", 5)
+                    "lives": int(attr.get("lives", 5))
                 }
                 directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
+                # Direct prompt for color
+                speech_text = data.get("WELCOME_BACK_SQUARES", "Welcome back! What color is {square}?").format(square=current_square)
             else: # puzzles
                 puzzle_info = {
                     "fen": attr.get("board_fen"),
@@ -413,6 +444,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
                     "subtitle": data["SOLVE_PUZZLE"]
                 }
                 directive = get_apl_directive(handler_input, engine=puzzle_info, type="puzzles")
+                speech_text = data.get("WELCOME_BACK", "Welcome back! You were playing {mode}. Should we continue?").format(mode=mode)
                 
             response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
             if directive:
@@ -571,9 +603,16 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             attr["lives"] = max(0, lives)
 
         # Calculate time taken for THIS square
-        now = time.time()
-        elapsed_time = round(now - attr.get("start_time", now), 1)
+        now = Decimal(str(time.time()))
+        start_time = attr.get("start_time", now)
+        if isinstance(start_time, (float, int)):
+            start_time = Decimal(str(start_time))
+            
+        elapsed_time = round(now - start_time, 1)
         last_time = attr.get("last_time")
+        if last_time is not None:
+             last_time = Decimal(str(last_time))
+             
         arrow = ""
         if last_time is not None:
             if elapsed_time < last_time:
@@ -582,7 +621,11 @@ class SquareColorIntentHandler(AbstractRequestHandler):
                 arrow = "↑"
 
         # Update accumulated time
-        attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + elapsed_time
+        accumulated = attr.get("squares_accumulated_time", Decimal('0'))
+        if isinstance(accumulated, (float, int)):
+            accumulated = Decimal(str(accumulated))
+            
+        attr["squares_accumulated_time"] = accumulated + elapsed_time
         attr["squares_session_start_time"] = now # Reset session start for next square
         attr["last_time"] = elapsed_time
         # attr["start_time"] is still used for individual square timing
@@ -605,8 +648,17 @@ class SquareColorIntentHandler(AbstractRequestHandler):
         if not remaining:
             # Completion!
             # Add session time to accumulated time
-            session_duration = round(now - attr.get("squares_session_start_time", now), 1)
-            total_time_seconds = int(attr.get("squares_accumulated_time", 0) + session_duration)
+            session_start = attr.get("squares_session_start_time", now)
+            if isinstance(session_start, (float, int)):
+                session_start = Decimal(str(session_start))
+                
+            session_duration = round(now - session_start, 1)
+            
+            accumulated = attr.get("squares_accumulated_time", Decimal('0'))
+            if isinstance(accumulated, (float, int)):
+                accumulated = Decimal(str(accumulated))
+                
+            total_time_seconds = int(accumulated + session_duration)
             
             minutes = total_time_seconds // 60
             seconds = total_time_seconds % 60
@@ -646,12 +698,12 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             if elapsed_time < 10:
                 rating_number = 5
             else:
-                rating_number = max(0, 5.0 - ((elapsed_time - 10) // 5 + 1) * 0.5)
+                rating_number = float(max(Decimal('0'), Decimal('5.0') - ((elapsed_time - 10) // 5 + 1) * Decimal('0.5')))
             feedback_msg = data['CORRECT_ANSWER']
             speech_text = f"{feedback_msg} {data['NEXT_SQUARE'].format(square=new_square)}"
         else:
             rating_number = 0
-            lives = persistent_attr.get("lives", 0)
+            lives = persistent_attr.get("lives", Decimal('0'))
             feedback_msg = data['WRONG_ANSWER']
             if lives > 0:
                 speech_text = f"{feedback_msg} {data['LIVES_REMAINING'].format(lives=lives)} {data['NEXT_SQUARE'].format(square=new_square)}"
@@ -671,7 +723,7 @@ class SquareColorIntentHandler(AbstractRequestHandler):
             "currentQuestion": data["SQUARES_MODE_START"].format(square=new_square).split('?')[-1].strip() or new_square,
             "timeText": time_text,
             "ratingNumber": rating_number,
-            "lives": attr.get("lives", 5)
+            "lives": int(attr.get("lives", 5))
         }
         
         directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
@@ -778,9 +830,17 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
         
         # Finalize accumulated time if in squares mode
         if mode == "squares" and "squares_session_start_time" in attr:
-            now = time.time()
-            session_duration = round(now - attr["squares_session_start_time"], 1)
-            attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + session_duration
+            now = Decimal(str(time.time()))
+            session_start = attr["squares_session_start_time"]
+            if isinstance(session_start, (float, int)):
+                session_start = Decimal(str(session_start))
+            session_duration = round(now - session_start, 1)
+            
+            accumulated = attr.get("squares_accumulated_time", Decimal('0'))
+            if isinstance(accumulated, (float, int)):
+                accumulated = Decimal(str(accumulated))
+                
+            attr["squares_accumulated_time"] = accumulated + session_duration
             attr.pop("squares_session_start_time") # Clear to avoid double counting
 
         speech_key = f"GOODBYE_{mode.upper()}"
@@ -821,8 +881,8 @@ class YesIntentHandler(AbstractRequestHandler):
                 current_square = attr.get("current_square")
                 speech_text = data["NEXT_SQUARE"].format(square=current_square)
                 # We need to set the start_time for the square timer
-                attr["start_time"] = time.time()
-                attr["squares_session_start_time"] = time.time()
+                attr["start_time"] = Decimal(str(time.time()))
+                attr["squares_session_start_time"] = Decimal(str(time.time()))
                 
                 response_builder = handler_input.response_builder.speak(speech_text).ask(speech_text)
                 squares_param = ",".join([f"{k}:{v}" for k, v in attr.get("squares_history", {}).items()])
@@ -831,7 +891,7 @@ class YesIntentHandler(AbstractRequestHandler):
                     "feedback": "",
                     "isCorrect": True,
                     "currentQuestion": current_square,
-                    "lives": attr.get("lives", 5)
+                    "lives": int(attr.get("lives", 5))
                 }
                 directive = get_apl_directive(handler_input, engine=squares_info, type="squares")
                 if directive:
@@ -919,9 +979,17 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         attr = handler_input.attributes_manager.session_attributes
         if attr.get("mode") == "squares" and "squares_session_start_time" in attr:
-            now = time.time()
-            session_duration = round(now - attr["squares_session_start_time"], 1)
-            attr["squares_accumulated_time"] = attr.get("squares_accumulated_time", 0) + session_duration
+            now = Decimal(str(time.time()))
+            session_start = attr["squares_session_start_time"]
+            if isinstance(session_start, (float, int)):
+                session_start = Decimal(str(session_start))
+            session_duration = round(now - session_start, 1)
+            
+            accumulated = attr.get("squares_accumulated_time", Decimal('0'))
+            if isinstance(accumulated, (float, int)):
+                accumulated = Decimal(str(accumulated))
+                
+            attr["squares_accumulated_time"] = accumulated + session_duration
         
         # Explicitly save state on session end (response interceptors don't run here)
         try:
@@ -976,7 +1044,7 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
         last_reset = persistent_attr.get("last_reset_date")
         
         if last_reset != today:
-            persistent_attr["lives"] = 5
+            persistent_attr["lives"] = Decimal('5')
             persistent_attr["last_reset_date"] = today
             logger.info(f"Daily reset: Lives reset to 5 for {today}")
             try:
@@ -997,7 +1065,7 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
                     attr[key] = persistent_attr[key]
                 elif key == "lives":
                     # Fallback for new users
-                    attr["lives"] = 5
+                    attr["lives"] = Decimal('5')
             
             logger.info(f"Loaded persistent attributes into session: {attr}")
             
@@ -1005,9 +1073,9 @@ class LoadPersistenceInterceptor(AbstractRequestInterceptor):
             if attr.get("mode") == "squares":
                 if "squares_accumulated_time" not in attr and "squares_start_timestamp" in attr:
                     # Initialize accumulated time from old total if possible (though old total was just a timestamp)
-                    attr["squares_accumulated_time"] = 0 
+                    attr["squares_accumulated_time"] = Decimal('0') 
                 if "squares_session_start_time" not in attr:
-                    attr["squares_session_start_time"] = time.time()
+                    attr["squares_session_start_time"] = Decimal(str(time.time()))
 
 class SavePersistenceInterceptor(AbstractResponseInterceptor):
     def process(self, handler_input, response):
